@@ -31,15 +31,15 @@ class Git : public QObject
 {
     Q_OBJECT
 public:
-    Git() = default;
+    explicit Git(QObject *parent = nullptr);
     QString createBackupBranch();
+    QString resetToCommit(const QString &commit);
     QStringList getStatus(const QString &commit);
     QStringList listCommits();
     bool hasModifiedFiles();
     static bool needElevation();
     void add(const QStringList &files);
     void commit(const QStringList &files, const QString &message);
-    QString resetToCommit(const QString &commit);
     void revertFiles(const QString &commit, const QStringList &files);
     void stash(const QStringList &files);
 
@@ -48,6 +48,7 @@ private:
     QString getCurrentBranch();
     bool initialize();
     static bool isInitialized();
+    bool isLargeDirectory();
 };
 
 #endif // GIT_H

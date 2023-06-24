@@ -21,8 +21,17 @@
  **********************************************************************/
 #include "git.h"
 
+#include <QApplication>
 #include <QDateTime>
 #include <QDir>
+#include <QMessageBox>
+
+Git::Git(QObject *parent)
+    : QObject(parent)
+{
+    connect(&cmd, &Cmd::started, [] { QApplication::setOverrideCursor(QCursor(Qt::BusyCursor)); });
+    connect(&cmd, &Cmd::finished, [] { QApplication::setOverrideCursor(QCursor(Qt::ArrowCursor)); });
+}
 
 void Git::add(const QStringList &files)
 {
@@ -35,13 +44,21 @@ void Git::add(const QStringList &files)
 void Git::commit(const QStringList &files, const QString &message)
 {
     const QString &addList = files.isEmpty() ? "." : files.join(" ");
-    if (!isInitialized())
+    if (!isInitialized()) {
+        if (isLargeDirectory()) {
+            if (QMessageBox::No
+                == QMessageBox::question(nullptr, tr("Confirmation"),
+                                         tr("You are trying to snapshot a large folder, are you sure? If you select "
+                                            "'Yes' it might take a long time to process.")))
+                return;
+        }
         cmd.run("cd " + QDir::currentPath() + " && git init && git add " + addList + " && git commit -m '" + message
                     + "'",
                 false, needElevation());
-    else
+    } else {
         cmd.run("cd " + QDir::currentPath() + " && git add " + addList + " && git commit -m '" + message + "'", false,
                 needElevation());
+    }
 }
 
 void Git::stash(const QStringList &files)
@@ -108,3 +125,9 @@ bool Git::isInitialized() { return QProcess::execute("git", {"rev-parse", "--is-
 bool Git::needElevation() { return (!QFileInfo(QDir::currentPath() + "/.").isWritable()); }
 
 QString Git::getCurrentBranch() { return cmd.getCmdOut("git branch --show-current"); }
+
+// Try to guess if the directory has a lot of file in a quick way
+bool Git::isLargeDirectory()
+{
+    return cmd.getCmdOut("find " + QDir::currentPath() + " -maxdepth 3 2>/dev/null | wc -l").toUInt() > 500;
+}
