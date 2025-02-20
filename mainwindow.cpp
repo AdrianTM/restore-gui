@@ -242,6 +242,8 @@ void MainWindow::snapshotSelection_changed()
     }
     ui->pushRestore->setDisabled(ui->listChanges->count() == 0
                                  || ui->listChanges->item(0)->text() == tr("*** No changes from latest snapshot ***"));
+    ui->pushDiff->setDisabled(ui->listChanges->count() == 0
+                              || ui->listChanges->item(0)->text() == tr("*** No changes from latest snapshot ***"));
 }
 
 bool MainWindow::anyFileSelected()
@@ -296,6 +298,7 @@ void MainWindow::displayChanges(const QStringList &list)
     }
     if (ui->listChanges->count() == 0) {
         ui->listChanges->addItem(tr("*** No changes from latest snapshot ***"));
+        ui->pushDiff->setDisabled(true);
     }
 }
 
