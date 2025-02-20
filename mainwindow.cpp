@@ -165,7 +165,7 @@ void MainWindow::showDiff()
     QString file = item != nullptr ? item->text().section('\t', 1) : "";
 
     QDialog dialog(this);
-    dialog.setWindowTitle(file);
+    dialog.setWindowTitle(file.isEmpty() ? tr("Current ..") + ui->listSnapshots->currentItem()->text() : file);
     auto *layout = new QVBoxLayout(&dialog);
     auto *textEdit = new QPlainTextEdit(&dialog);
     textEdit->setReadOnly(true);
