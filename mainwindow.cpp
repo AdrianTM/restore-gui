@@ -91,6 +91,8 @@ void MainWindow::setup()
     ui->pushUp->setIcon(QIcon::fromTheme("go-up-symbolic", QIcon(":/icons/images/go-up-symbolic.svg")));
     ui->pushBack->setIcon(QIcon::fromTheme("go-previous-symbolic", QIcon(":/icons/images/go-previous-symbolic.svg")));
     ui->pushForward->setIcon(QIcon::fromTheme("go-next-symbolic", QIcon(":/icons/images/go-next-symbolic.svg")));
+    ui->pushRefresh->setIcon(
+        QIcon::fromTheme("view-refresh-symbolic", QIcon(":/icons/images/view-refresh-symbolic.svg")));
     ui->pushBack->setDisabled(true);
     ui->pushForward->setDisabled(true);
     ui->pushRestore->setText(tr("Restore entire snapshot"));
@@ -141,6 +143,7 @@ void MainWindow::setConnections()
 {
     connect(this, &MainWindow::dirChanged, this, &MainWindow::onDirChanged);
     connect(ui->editCurrentDir, &QLineEdit::editingFinished, this, &MainWindow::editCurrent_done);
+    connect(ui->listChanges, &QListWidget::customContextMenuRequested, this, &MainWindow::contextMenuChanges);
     connect(ui->listSnapshots, &QListWidget::itemSelectionChanged, this, &MainWindow::snapshotSelection_changed);
     connect(ui->pushAbout, &QPushButton::clicked, this, &MainWindow::pushAbout_clicked);
     connect(ui->pushBack, &QPushButton::clicked, this, &MainWindow::pushBack_clicked);
@@ -148,11 +151,11 @@ void MainWindow::setConnections()
     connect(ui->pushCancel, &QPushButton::pressed, this, &MainWindow::close);
     connect(ui->pushForward, &QPushButton::clicked, this, &MainWindow::pushForward_clicked);
     connect(ui->pushHelp, &QPushButton::clicked, this, &MainWindow::pushHelp_clicked);
+    connect(ui->pushRefresh, &QPushButton::clicked, this, &MainWindow::pushRefresh_clicked);
+    connect(ui->pushRestore, &QPushButton::clicked, this, &MainWindow::restoreSnapshot);
     connect(ui->pushSnapshot, &QPushButton::clicked, this, &MainWindow::createSnapshot);
     connect(ui->pushUp, &QPushButton::clicked, this, &MainWindow::pushUp_clicked);
-    connect(ui->pushRestore, &QPushButton::clicked, this, &MainWindow::restoreSnapshot);
     ui->listChanges->setContextMenuPolicy(Qt::CustomContextMenu);
-    connect(ui->listChanges, &QListWidget::customContextMenuRequested, this, &MainWindow::contextMenuChanges);
 }
 
 void MainWindow::showDiff()
@@ -379,6 +382,11 @@ void MainWindow::pushHelp_clicked()
 {
     const QString &url = QStringLiteral("google.com");
     displayDoc(url, tr("%1 Help").arg(this->windowTitle()));
+}
+
+void MainWindow::pushRefresh_clicked()
+{
+    onDirChanged();
 }
 
 void MainWindow::pushUp_clicked()

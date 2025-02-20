@@ -60,6 +60,7 @@ private slots:
     void pushCD_clicked();
     void pushForward_clicked();
     void pushHelp_clicked();
+    void pushRefresh_clicked();
     void pushUp_clicked();
     void restoreSnapshot();
     void setConnections();

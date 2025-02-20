@@ -4,5 +4,6 @@
         <file>images/go-up-symbolic.svg</file>
         <file>images/go-previous-symbolic.svg</file>
         <file>images/go-next-symbolic.svg</file>
+        <file>images/view-refresh-symbolic.svg</file>
     </qresource>
 </RCC>
