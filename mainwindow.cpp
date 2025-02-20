@@ -149,6 +149,7 @@ void MainWindow::setConnections()
     connect(ui->pushBack, &QPushButton::clicked, this, &MainWindow::pushBack_clicked);
     connect(ui->pushCD, &QPushButton::clicked, this, &MainWindow::pushCD_clicked);
     connect(ui->pushCancel, &QPushButton::pressed, this, &MainWindow::close);
+    connect(ui->pushDiff, &QPushButton::pressed, this, &MainWindow::pushDiff_clicked);
     connect(ui->pushForward, &QPushButton::clicked, this, &MainWindow::pushForward_clicked);
     connect(ui->pushHelp, &QPushButton::clicked, this, &MainWindow::pushHelp_clicked);
     connect(ui->pushRefresh, &QPushButton::clicked, this, &MainWindow::pushRefresh_clicked);
@@ -161,10 +162,7 @@ void MainWindow::setConnections()
 void MainWindow::showDiff()
 {
     auto *item = qobject_cast<QCheckBox *>(ui->listChanges->itemWidget(ui->listChanges->currentItem()));
-    if (item == nullptr) {
-        return;
-    }
-    QString file = item->text().section('\t', 1);
+    QString file = item != nullptr ? item->text().section('\t', 1) : "";
 
     QDialog dialog(this);
     dialog.setWindowTitle(file);
@@ -177,7 +175,11 @@ void MainWindow::showDiff()
 
     const QString &commit = ui->listSnapshots->currentItem()->data(Qt::UserRole).toString();
     QProcess proc;
-    proc.start("git", {"diff", commit, file});
+    if (file.isEmpty()) {
+        proc.start("git", {"diff", commit});
+    } else {
+        proc.start("git", {"diff", commit, file});
+    }
     proc.waitForFinished();
     textEdit->setPlainText(QString::fromUtf8(proc.readAllStandardOutput()));
 
@@ -375,6 +377,11 @@ void MainWindow::pushCD_clicked()
         currentDir.setPath(selected);
         emit dirChanged();
     }
+}
+
+void MainWindow::pushDiff_clicked()
+{
+    showDiff();
 }
 
 // Help button clicked

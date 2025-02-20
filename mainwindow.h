@@ -58,6 +58,7 @@ private slots:
     void pushAbout_clicked();
     void pushBack_clicked();
     void pushCD_clicked();
+    void pushDiff_clicked();
     void pushForward_clicked();
     void pushHelp_clicked();
     void pushRefresh_clicked();
