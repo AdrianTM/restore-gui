@@ -35,22 +35,24 @@ Git::Git(QObject *parent)
 
 void Git::add(const QStringList &files)
 {
-    if (files.size() == 1 && files.at(0) == ".")
+    if (files.size() == 1 && files.at(0) == '.') {
         cmd.run("git add .", false, needElevation());
-    else
-        cmd.run("git add " + files.join(" "), false, needElevation());
+    } else {
+        cmd.run("git add " + files.join(' '), false, needElevation());
+    }
 };
 
 void Git::commit(const QStringList &files, const QString &message)
 {
-    const QString &addList = files.isEmpty() ? "." : files.join(" ");
+    const QString &addList = files.isEmpty() ? "." : files.join(' ');
     if (!isInitialized()) {
         if (isLargeDirectory()) {
             if (QMessageBox::No
                 == QMessageBox::question(nullptr, tr("Confirmation"),
                                          tr("You are trying to snapshot a large folder, are you sure? If you select "
-                                            "'Yes' it might take a long time to process.")))
+                                            "'Yes' it might take a long time to process."))) {
                 return;
+            }
         }
         cmd.run("cd " + QDir::currentPath() + " && git init && git add " + addList + " && git commit -m '" + message
                     + "'",
@@ -63,20 +65,22 @@ void Git::commit(const QStringList &files, const QString &message)
 
 void Git::stash(const QStringList &files)
 {
-    if (files.isEmpty())
+    if (files.isEmpty()) {
         cmd.run("cd " + QDir::currentPath() + " && git stash", false, needElevation());
-    else
-        cmd.run("cd " + QDir::currentPath() + " && git stash push " + files.join(" ")
+    } else {
+        cmd.run("cd " + QDir::currentPath() + " && git stash push " + files.join(' ')
                     + " -m 'stash created by GUI program'",
                 false, needElevation());
+    }
 }
 
 // Stash, branch, and reset
 QString Git::resetToCommit(const QString &commit)
 {
     const QString &name = "bak_" + QDateTime::currentDateTime().toString(QStringLiteral("yyyyMMdd_HHmmss"));
-    if (commit.isEmpty())
+    if (commit.isEmpty()) {
         return {};
+    }
     cmd.run("cd " + QDir::currentPath() + " && git stash && git branch " + name + " && git reset --hard " + commit,
             false, needElevation());
     return name;
@@ -85,10 +89,11 @@ QString Git::resetToCommit(const QString &commit)
 // Stash and revert
 void Git::revertFiles(const QString &commit, const QStringList &files)
 {
-    if (files.isEmpty() || commit.isEmpty())
+    if (files.isEmpty() || commit.isEmpty()) {
         return;
-    cmd.run("cd " + QDir::currentPath() + " && git stash && git checkout " + commit + " -- " + files.join(" ")
-                + " && git commit -m 'Restored files: " + files.join(" ") + "'",
+    }
+    cmd.run("cd " + QDir::currentPath() + " && git stash && git checkout " + commit + " -- " + files.join(' ')
+                + " && git commit -m 'Restored files: " + files.join(' ') + "'",
             false, needElevation());
 }
 
@@ -101,30 +106,44 @@ QString Git::createBackupBranch()
 
 QStringList Git::getStatus(const QString &commit)
 {
-    return cmd.getCmdOut("git diff --name-status " + commit).split("\n");
+    return cmd.getCmdOut("git diff --name-status " + commit).split('\n');
 }
 
 QStringList Git::listCommits()
 {
-    if (!isInitialized())
+    if (!isInitialized()) {
         return {};
-    return cmd.getCmdOut("git log --pretty=format:'%h|%cr - %s'").split("\n");
+    }
+    return cmd.getCmdOut("git log --pretty=format:'%h|%cr - %s'").split('\n');
 }
 
 bool Git::hasModifiedFiles()
 {
-    if (!isInitialized())
+    if (!isInitialized()) {
         return true;
+    }
     return !cmd.getCmdOut("git status --porcelain").isEmpty();
 }
 
-bool Git::initialize() { return cmd.run("cd " + QDir::currentPath() + "&& git init", false, needElevation()); }
+bool Git::initialize()
+{
+    return cmd.run("cd " + QDir::currentPath() + "&& git init", false, needElevation());
+}
 
-bool Git::isInitialized() { return QProcess::execute("git", {"rev-parse", "--is-inside-work-tree"}) == 0; }
+bool Git::isInitialized()
+{
+    return QProcess::execute("git", {"rev-parse", "--is-inside-work-tree"}) == 0;
+}
 
-bool Git::needElevation() { return (!QFileInfo(QDir::currentPath() + "/.").isWritable()); }
+bool Git::needElevation()
+{
+    return (!QFileInfo(QDir::currentPath() + "/.").isWritable());
+}
 
-QString Git::getCurrentBranch() { return cmd.getCmdOut("git branch --show-current"); }
+QString Git::getCurrentBranch()
+{
+    return cmd.getCmdOut("git branch --show-current");
+}
 
 // Try to guess if the directory has a lot of file in a quick way
 bool Git::isLargeDirectory()

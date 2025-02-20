@@ -39,15 +39,17 @@
 #include "about.h"
 
 MainWindow::MainWindow(const QCommandLineParser &arg_parser, QWidget *parent)
-    : QDialog(parent)
-    , ui(new Ui::MainWindow)
-    , git(new Git)
+    : QDialog(parent),
+      ui(new Ui::MainWindow),
+      git(new Git)
 {
     ui->setupUi(this);
     const auto &arg_list = arg_parser.positionalArguments();
-    if (!arg_list.empty())
-        if (QFileInfo::exists(arg_list.first()))
+    if (!arg_list.empty()) {
+        if (QFileInfo::exists(arg_list.first())) {
             currentDir.setPath(arg_list.first());
+        }
+    }
     setWindowFlags(Qt::Window); // for the close, min and max buttons
 
     const QSize size = this->size();
@@ -113,8 +115,9 @@ void MainWindow::createSnapshot()
         = QInputDialog::getText(nullptr, "New snapshot", "Enter a snapshot label:", QLineEdit::Normal, "", &ok);
 
     if (ok && !message.isEmpty()) {
-        if (ui->pushSnapshot->text() == tr("Create snapshot for entire directory"))
+        if (ui->pushSnapshot->text() == tr("Create snapshot for entire directory")) {
             git->commit(listSelectedFiles(), message);
+        }
         listSnapshots();
     }
 }
@@ -155,9 +158,10 @@ void MainWindow::setConnections()
 void MainWindow::showDiff()
 {
     auto *item = qobject_cast<QCheckBox *>(ui->listChanges->itemWidget(ui->listChanges->currentItem()));
-    if (item == nullptr)
+    if (item == nullptr) {
         return;
-    QString file = item->text().section("\t", 1);
+    }
+    QString file = item->text().section('\t', 1);
 
     QDialog dialog(this);
     dialog.setWindowTitle(file);
@@ -199,14 +203,15 @@ void MainWindow::showDiff()
             while (!cursor.atBlockEnd()) {
                 cursor.movePosition(QTextCursor::NextWord, QTextCursor::KeepAnchor);
                 QString selectedWord = cursor.selectedText();
-                if (selectedWord.contains(QRegularExpression("@@.*@@")))
+                if (selectedWord.contains(QRegularExpression("@@.*@@"))) {
                     break;
+                }
             }
             cursor.mergeCharFormat(locationFormat);
-        } else if (cursor.block().text().startsWith("+")) {
+        } else if (cursor.block().text().startsWith('+')) {
             cursor.movePosition(QTextCursor::EndOfLine, QTextCursor::KeepAnchor);
             cursor.mergeCharFormat(addedFormat);
-        } else if (cursor.block().text().startsWith("-")) {
+        } else if (cursor.block().text().startsWith('-')) {
             cursor.movePosition(QTextCursor::EndOfLine, QTextCursor::KeepAnchor);
             cursor.mergeCharFormat(removedFormat);
         }
@@ -225,8 +230,9 @@ void MainWindow::snapshotSelection_changed()
     if (!selectedItems.isEmpty() && selectedItems.at(0)->text() != tr("No snapshots")) {
         ui->listChanges->clear();
         auto list = git->getStatus(selectedItems.at(0)->data(Qt::UserRole).toString());
-        if (!list.isEmpty())
+        if (!list.isEmpty()) {
             displayChanges(list);
+        }
         // ui->pushSnapshot->setDisabled(ui->listChanges->count() == 0);
     }
     ui->pushRestore->setDisabled(ui->listChanges->count() == 0
@@ -237,8 +243,9 @@ bool MainWindow::anyFileSelected()
 {
     for (int row = 0; row < ui->listChanges->count(); ++row) {
         auto *check = qobject_cast<QCheckBox *>(ui->listChanges->itemWidget(ui->listChanges->item(row)));
-        if (check != nullptr && check->checkState() == Qt::Checked)
+        if (check != nullptr && check->checkState() == Qt::Checked) {
             return true;
+        }
     }
     return false;
 }
@@ -250,8 +257,9 @@ QVector<QPair<QString, QString>> MainWindow::splitLog(const QStringList &log)
 
     for (const QString &item : log) {
         QStringList parts = item.split('|');
-        if (parts.size() >= 2)
+        if (parts.size() >= 2) {
             result.append(qMakePair(parts.at(0), parts.at(1)));
+        }
     }
     return result;
 }
@@ -260,8 +268,9 @@ void MainWindow::displayChanges(const QStringList &list)
 {
     ui->listChanges->clear();
     for (const auto &file : list) {
-        if (file.isEmpty())
+        if (file.isEmpty()) {
             continue;
+        }
         auto *item = new QListWidgetItem(ui->listChanges);
         auto *check = new QCheckBox(file);
         ui->listChanges->setItemWidget(item, check);
@@ -280,8 +289,9 @@ void MainWindow::displayChanges(const QStringList &list)
             }
         });
     }
-    if (ui->listChanges->count() == 0)
+    if (ui->listChanges->count() == 0) {
         ui->listChanges->addItem(tr("*** No changes from latest snapshot ***"));
+    }
 }
 
 QStringList MainWindow::listSelectedFiles()
@@ -290,8 +300,9 @@ QStringList MainWindow::listSelectedFiles()
     selected.reserve(ui->listChanges->count());
     for (int row = 0; row < ui->listChanges->count(); ++row) {
         auto *check = qobject_cast<QCheckBox *>(ui->listChanges->itemWidget(ui->listChanges->item(row)));
-        if (check != nullptr && check->checkState() == Qt::Checked)
+        if (check != nullptr && check->checkState() == Qt::Checked) {
             selected << check->text().section("\t", 1);
+        }
     }
     return selected;
 }
@@ -412,10 +423,12 @@ void MainWindow::restoreSnapshot()
 
 void MainWindow::pushBack_clicked()
 {
-    if (!history.isEmpty())
+    if (!history.isEmpty()) {
         backHistory.push(history.pop());
-    if (!history.isEmpty())
+    }
+    if (!history.isEmpty()) {
         ui->editCurrentDir->setText(history.pop());
+    }
     editCurrent_done();
 }
 
