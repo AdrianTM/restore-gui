@@ -41,7 +41,7 @@
 MainWindow::MainWindow(const QCommandLineParser &arg_parser, QWidget *parent)
     : QDialog(parent),
       ui(new Ui::MainWindow),
-      git(new Git)
+      git(new Git(this))
 {
     ui->setupUi(this);
     const auto &arg_list = arg_parser.positionalArguments();
@@ -60,6 +60,7 @@ MainWindow::MainWindow(const QCommandLineParser &arg_parser, QWidget *parent)
             centerWindow();
         }
     }
+
     setConnections();
     setup();
 }
@@ -67,12 +68,13 @@ MainWindow::MainWindow(const QCommandLineParser &arg_parser, QWidget *parent)
 MainWindow::~MainWindow()
 {
     settings.setValue(QStringLiteral("geometry"), saveGeometry());
+    delete git;
     delete ui;
 }
 
 void MainWindow::centerWindow()
 {
-    QRect screenGeometry = QApplication::primaryScreen()->geometry();
+    const QRect screenGeometry = QApplication::primaryScreen()->geometry();
     const int x = (screenGeometry.width() - this->width()) / 2;
     const int y = (screenGeometry.height() - this->height()) / 2;
     this->move(x, y);
@@ -101,7 +103,7 @@ void MainWindow::setup()
 
 void MainWindow::editCurrent_done()
 {
-    const QString &new_dir = ui->editCurrentDir->text();
+    const QString new_dir = ui->editCurrentDir->text();
     if (QFileInfo::exists(new_dir) && new_dir != currentDir.path()) {
         currentDir.setPath(new_dir);
         emit dirChanged();
@@ -112,11 +114,11 @@ void MainWindow::editCurrent_done()
 
 void MainWindow::createSnapshot()
 {
-    bool ok {};
-    QString message
-        = QInputDialog::getText(nullptr, "New snapshot", "Enter a snapshot label:", QLineEdit::Normal, "", &ok);
+    bool isOk {};
+    const QString message = QInputDialog::getText(this, tr("New snapshot"), tr("Enter a snapshot label:"),
+                                                  QLineEdit::Normal, QString(), &isOk);
 
-    if (ok && !message.isEmpty()) {
+    if (isOk && !message.isEmpty()) {
         if (ui->pushSnapshot->text() == tr("Create snapshot for entire directory")) {
             git->commit(listSelectedFiles(), message);
         }
@@ -126,25 +128,34 @@ void MainWindow::createSnapshot()
 
 void MainWindow::onDirChanged()
 {
+    // Reset UI state
     ui->listChanges->clear();
     ui->pushRestore->setDisabled(true);
     ui->pushRestore->setText(tr("Restore entire snapshot"));
     ui->pushSnapshot->setText(tr("Create snapshot for entire directory"));
+
+    // Update current directory
     QDir::setCurrent(currentDir.path());
     ui->editCurrentDir->setText(currentDir.path());
+
+    // Update navigation buttons
     ui->pushUp->setDisabled(currentDir.path() == "/");
     ui->pushBack->setDisabled(history.isEmpty());
     ui->pushForward->setDisabled(backHistory.isEmpty());
+
     history.push(currentDir.path());
     listSnapshots();
 }
 
 void MainWindow::setConnections()
 {
+    // Directory and file operations
     connect(this, &MainWindow::dirChanged, this, &MainWindow::onDirChanged);
     connect(ui->editCurrentDir, &QLineEdit::editingFinished, this, &MainWindow::editCurrent_done);
     connect(ui->listChanges, &QListWidget::customContextMenuRequested, this, &MainWindow::contextMenuChanges);
     connect(ui->listSnapshots, &QListWidget::itemSelectionChanged, this, &MainWindow::snapshotSelection_changed);
+
+    // Button clicks
     connect(ui->pushAbout, &QPushButton::clicked, this, &MainWindow::pushAbout_clicked);
     connect(ui->pushBack, &QPushButton::clicked, this, &MainWindow::pushBack_clicked);
     connect(ui->pushCD, &QPushButton::clicked, this, &MainWindow::pushCD_clicked);
@@ -156,16 +167,22 @@ void MainWindow::setConnections()
     connect(ui->pushRestore, &QPushButton::clicked, this, &MainWindow::restoreSnapshot);
     connect(ui->pushSnapshot, &QPushButton::clicked, this, &MainWindow::createSnapshot);
     connect(ui->pushUp, &QPushButton::clicked, this, &MainWindow::pushUp_clicked);
+
+    // Context menu policy
     ui->listChanges->setContextMenuPolicy(Qt::CustomContextMenu);
 }
 
 void MainWindow::showDiff()
 {
     auto *item = qobject_cast<QCheckBox *>(ui->listChanges->itemWidget(ui->listChanges->currentItem()));
-    QString file = item != nullptr ? item->text().section('\t', 1) : "";
+    if (!ui->listSnapshots->currentItem()) {
+        return;
+    }
+    const QString file = item != nullptr ? item->text().section('\t', 1) : QString();
 
     QDialog dialog(this);
     dialog.setWindowTitle(file.isEmpty() ? tr("Current ..") + ui->listSnapshots->currentItem()->text() : file);
+
     auto *layout = new QVBoxLayout(&dialog);
     auto *textEdit = new QPlainTextEdit(&dialog);
     textEdit->setReadOnly(true);
@@ -173,7 +190,7 @@ void MainWindow::showDiff()
     dialog.resize(800, 600);
     dialog.setLayout(layout);
 
-    const QString &commit = ui->listSnapshots->currentItem()->data(Qt::UserRole).toString();
+    const QString commit = ui->listSnapshots->currentItem()->data(Qt::UserRole).toString();
     QProcess proc;
     if (file.isEmpty()) {
         proc.start("git", {"diff", commit});
@@ -187,41 +204,43 @@ void MainWindow::showDiff()
     font.setStyleHint(QFont::Monospace);
     dialog.setFont(font);
 
+    // Define text formats for diff highlighting
     QTextCharFormat addedFormat;
-    QTextCharFormat locationFormat;
-    QTextCharFormat removedFormat;
-
     addedFormat.setForeground(Qt::darkGreen);
     addedFormat.setFontWeight(QFont::Bold);
 
+    QTextCharFormat locationFormat;
     locationFormat.setForeground(QColor(35, 140, 216));
     locationFormat.setFontWeight(QFont::Bold);
 
+    QTextCharFormat removedFormat;
     removedFormat.setForeground(QColor(187, 15, 30));
     removedFormat.setFontWeight(QFont::Bold);
 
+    // Apply syntax highlighting
     QTextCursor cursor(textEdit->document());
-
     cursor.setPosition(0);
     while (!cursor.atEnd()) {
-        if (cursor.block().text().startsWith("@@")) {
+        const QString lineText = cursor.block().text();
+        if (lineText.startsWith("@@")) {
             while (!cursor.atBlockEnd()) {
                 cursor.movePosition(QTextCursor::NextWord, QTextCursor::KeepAnchor);
-                QString selectedWord = cursor.selectedText();
+                const QString selectedWord = cursor.selectedText();
                 if (selectedWord.contains(QRegularExpression("@@.*@@"))) {
                     break;
                 }
             }
             cursor.mergeCharFormat(locationFormat);
-        } else if (cursor.block().text().startsWith('+')) {
+        } else if (lineText.startsWith('+')) {
             cursor.movePosition(QTextCursor::EndOfLine, QTextCursor::KeepAnchor);
             cursor.mergeCharFormat(addedFormat);
-        } else if (cursor.block().text().startsWith('-')) {
+        } else if (lineText.startsWith('-')) {
             cursor.movePosition(QTextCursor::EndOfLine, QTextCursor::KeepAnchor);
             cursor.mergeCharFormat(removedFormat);
         }
         cursor.movePosition(QTextCursor::NextBlock, QTextCursor::MoveAnchor);
     }
+
     cursor.setPosition(0);
     dialog.exec();
     dialog.adjustSize();
@@ -231,19 +250,21 @@ void MainWindow::snapshotSelection_changed()
 {
     ui->pushRestore->setText(tr("Restore entire snapshot"));
     ui->pushSnapshot->setText(tr("Create snapshot for entire directory"));
-    auto selectedItems = ui->listSnapshots->selectedItems();
+
+    const auto selectedItems = ui->listSnapshots->selectedItems();
     if (!selectedItems.isEmpty() && selectedItems.at(0)->text() != tr("No snapshots")) {
         ui->listChanges->clear();
-        auto list = git->getStatus(selectedItems.at(0)->data(Qt::UserRole).toString());
+        const auto list = git->getStatus(selectedItems.at(0)->data(Qt::UserRole).toString());
         if (!list.isEmpty()) {
             displayChanges(list);
         }
-        // ui->pushSnapshot->setDisabled(ui->listChanges->count() == 0);
     }
-    ui->pushRestore->setDisabled(ui->listChanges->count() == 0
-                                 || ui->listChanges->item(0)->text() == tr("*** No changes from latest snapshot ***"));
-    ui->pushDiff->setDisabled(ui->listChanges->count() == 0
-                              || ui->listChanges->item(0)->text() == tr("*** No changes from latest snapshot ***"));
+
+    const bool noChanges = ui->listChanges->count() == 0
+                           || ui->listChanges->item(0)->text() == tr("*** No changes from latest snapshot ***");
+
+    ui->pushRestore->setDisabled(noChanges);
+    ui->pushDiff->setDisabled(noChanges);
 }
 
 bool MainWindow::anyFileSelected()
@@ -263,7 +284,7 @@ QVector<QPair<QString, QString>> MainWindow::splitLog(const QStringList &log)
     result.reserve(log.size());
 
     for (const QString &item : log) {
-        QStringList parts = item.split('|');
+        const QStringList parts = item.split('|');
         if (parts.size() >= 2) {
             result.append(qMakePair(parts.at(0), parts.at(1)));
         }
@@ -281,21 +302,17 @@ void MainWindow::displayChanges(const QStringList &list)
         auto *item = new QListWidgetItem(ui->listChanges);
         auto *check = new QCheckBox(file);
         ui->listChanges->setItemWidget(item, check);
+
         connect(check, &QCheckBox::clicked, [this, check] {
-            if (check->checkState() == Qt::Checked) {
-                ui->pushSnapshot->setText(tr("Create snapshot for selected files"));
-                ui->pushRestore->setText(tr("Restore selected files"));
-                return;
-            }
-            if (anyFileSelected()) {
-                ui->pushRestore->setText(tr("Restore selected files"));
-                ui->pushSnapshot->setText(tr("Create snapshot for selected files"));
-            } else {
-                ui->pushRestore->setText(tr("Restore entire snapshot"));
-                ui->pushSnapshot->setText(tr("Create snapshot for entire directory"));
-            }
+            const bool isChecked = check->checkState() == Qt::Checked;
+            const bool hasSelected = isChecked || anyFileSelected();
+
+            ui->pushSnapshot->setText(hasSelected ? tr("Create snapshot for selected files")
+                                                  : tr("Create snapshot for entire directory"));
+            ui->pushRestore->setText(hasSelected ? tr("Restore selected files") : tr("Restore entire snapshot"));
         });
     }
+
     if (ui->listChanges->count() == 0) {
         ui->listChanges->addItem(tr("*** No changes from latest snapshot ***"));
         ui->pushDiff->setDisabled(true);
@@ -306,6 +323,7 @@ QStringList MainWindow::listSelectedFiles()
 {
     QStringList selected;
     selected.reserve(ui->listChanges->count());
+
     for (int row = 0; row < ui->listChanges->count(); ++row) {
         auto *check = qobject_cast<QCheckBox *>(ui->listChanges->itemWidget(ui->listChanges->item(row)));
         if (check != nullptr && check->checkState() == Qt::Checked) {
@@ -319,8 +337,10 @@ void MainWindow::listSnapshots()
 {
     ui->listSnapshots->clear();
     ui->listChanges->clear();
-    QStringList list = git->listCommits();
-    QVector<QPair<QString, QString>> pairList = splitLog(list);
+
+    const QStringList list = git->listCommits();
+    const QVector<QPair<QString, QString>> pairList = splitLog(list);
+
     if (!list.isEmpty()) {
         for (const QPair<QString, QString> &pair : pairList) {
             auto *item = new QListWidgetItem(pair.second);
@@ -333,34 +353,36 @@ void MainWindow::listSnapshots()
         ui->pushRestore->setText(tr("Restore entire snapshot"));
         ui->pushSnapshot->setText(tr("Create snapshot for entire directory"));
     }
+
     ui->listSnapshots->setCurrentRow(0);
-    if (!git->hasModifiedFiles()) {
-        ui->pushSnapshot->setDisabled(true);
-        ui->pushSnapshot->setToolTip(
-            tr("Most current snapshot is up-to-date, there's no need to create another snapshot"));
-    } else {
-        ui->pushSnapshot->setEnabled(true);
-        ui->pushSnapshot->setToolTip("");
-    }
+
+    const bool hasModifiedFiles = git->hasModifiedFiles();
+    ui->pushSnapshot->setDisabled(!hasModifiedFiles);
+    ui->pushSnapshot->setToolTip(
+        hasModifiedFiles ? QString()
+                         : tr("Most current snapshot is up-to-date, there's no need to create another snapshot"));
+
     snapshotSelection_changed();
 }
 
 void MainWindow::contextMenuChanges(QPoint pos)
 {
     QListWidgetItem *selectedItem = ui->listChanges->itemAt(pos);
-    if (selectedItem != nullptr) {
-        QMenu contextMenu(this);
-        QAction *actionDiff = contextMenu.addAction("Show diff from selected snapshot to current version");
-        connect(actionDiff, &QAction::triggered, this, &MainWindow::showDiff);
-        contextMenu.exec(ui->listChanges->mapToGlobal(pos));
+    if (selectedItem == nullptr) {
+        return;
     }
+
+    QMenu contextMenu(this);
+    QAction *actionDiff = contextMenu.addAction(tr("Show diff from selected snapshot to current version"));
+    connect(actionDiff, &QAction::triggered, this, &MainWindow::showDiff);
+    contextMenu.exec(ui->listChanges->mapToGlobal(pos));
 }
 
 void MainWindow::pushAbout_clicked()
 {
     this->hide();
     displayAboutMsgBox(
-        tr("About %1") + tr("Restore GUI"),
+        tr("About %1").arg(tr("Restore GUI")),
         R"(<p align="center"><b><h2>Restore GUI</h2></b></p><p align="center">)" + tr("Version: ")
             + QApplication::applicationVersion() + "</p><p align=\"center\"><h3>"
             + tr("Program that uses underlying git functionality to provide file snapshoting/restoring in a "
@@ -368,14 +390,14 @@ void MainWindow::pushAbout_clicked()
             + R"(</h3></p><p align="center"><a href="http://mxlinux.org">http://mxlinux.org</a><br /></p><p align="center">)"
             + tr("Copyright (c) MX Linux") + "<br /><br /></p>",
         QStringLiteral("/usr/share/doc/restore-gui/license.html"), tr("%1 License").arg(this->windowTitle()));
-
     this->show();
 }
 
 void MainWindow::pushCD_clicked()
 {
-    const QString &selected
+    const QString selected
         = QFileDialog::getExistingDirectory(this, tr("Select Directory"), QString(), QFileDialog::ShowDirsOnly);
+
     if (!selected.isEmpty() && QFileInfo::exists(selected)) {
         currentDir.setPath(selected);
         emit dirChanged();
@@ -387,10 +409,9 @@ void MainWindow::pushDiff_clicked()
     showDiff();
 }
 
-// Help button clicked
 void MainWindow::pushHelp_clicked()
 {
-    const QString &url = QStringLiteral("google.com");
+    const QString url = QStringLiteral("google.com");
     displayDoc(url, tr("%1 Help").arg(this->windowTitle()));
 }
 
@@ -408,35 +429,41 @@ void MainWindow::pushUp_clicked()
 
 void MainWindow::restoreSnapshot()
 {
-    if (QMessageBox::Yes
-        == QMessageBox::question(this, tr("Confirmation"),
-                                 tr("Do you want to revert the current changes? Any changes that were not "
-                                    "snapshotted will be lost."))) {
-        if (ui->listSnapshots->currentRow() == 0) { // if HEAD, ask and then stash files
+    const auto response
+        = QMessageBox::question(this, tr("Confirmation"),
+                                tr("Do you want to revert the current changes? Any changes that were not "
+                                   "snapshotted will be lost."));
 
-            git->stash(listSelectedFiles());
-            listSnapshots();
-            QMessageBox::information(
-                this, tr("Success"),
-                tr("You restored the original version of the files. Unsnapshotted changes are 'stashed', preserved "
-                   "with a 'git stash' command, if you need to recover those changes see 'git stash --help'"));
-
-        } else if (ui->pushRestore->text() == tr("Restore entire snapshot")) {
-            QString backup = git->resetToCommit(ui->listSnapshots->currentItem()->data(Qt::UserRole).toString());
-            QMessageBox::information(
-                this, tr("Success"),
-                tr("You restored a previous snapshot, all the subsequent snapshots were backed up to "
-                   "a git branch named %1")
-                    .arg(backup));
-        } else if (ui->pushRestore->text() == tr("Restore selected files")) {
-            git->revertFiles(ui->listSnapshots->currentItem()->data(Qt::UserRole).toString(), listSelectedFiles());
-            QMessageBox::information(
-                this, tr("Success"),
-                tr("You restored the selected version of the files. Unsnapshotted changes are 'stashed', preserved "
-                   "with a 'git stash' command, if you need to recover those changes see 'git stash --help'"));
-        }
-        listSnapshots();
+    if (response != QMessageBox::Yes) {
+        return;
     }
+
+    if (ui->listSnapshots->currentRow() == 0) {
+        git->stash(listSelectedFiles());
+        listSnapshots();
+        QMessageBox::information(
+            this, tr("Success"),
+            tr("You restored the original version of the files. Unsnapshotted "
+               "changes are 'stashed', preserved with a 'git stash' command, if you need to recover those changes "
+               "see 'git stash --help'"));
+
+    } else if (ui->pushRestore->text() == tr("Restore entire snapshot")) {
+        const QString backup = git->resetToCommit(ui->listSnapshots->currentItem()->data(Qt::UserRole).toString());
+        QMessageBox::information(this, tr("Success"),
+                                 tr("You restored a previous snapshot, all the subsequent snapshots were backed up to "
+                                    "a git branch named %1")
+                                     .arg(backup));
+
+    } else if (ui->pushRestore->text() == tr("Restore selected files")) {
+        git->revertFiles(ui->listSnapshots->currentItem()->data(Qt::UserRole).toString(), listSelectedFiles());
+        QMessageBox::information(
+            this, tr("Success"),
+            tr("You restored the selected version of the files. Unsnapshotted "
+               "changes are 'stashed', preserved with a 'git stash' command, if you need to recover those changes "
+               "see 'git stash --help'"));
+    }
+
+    listSnapshots();
 }
 
 void MainWindow::pushBack_clicked()

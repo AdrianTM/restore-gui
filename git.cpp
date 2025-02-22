@@ -40,7 +40,7 @@ void Git::add(const QStringList &files)
     } else {
         cmd.run("git add " + files.join(' '), false, needElevation());
     }
-};
+}
 
 void Git::commit(const QStringList &files, const QString &message)
 {
@@ -54,9 +54,9 @@ void Git::commit(const QStringList &files, const QString &message)
                 return;
             }
         }
-        cmd.run("cd " + QDir::currentPath() + " && git init && git add " + addList + " && git commit -m '" + message
-                    + "'",
-                false, needElevation());
+        QString command = "cd " + QDir::currentPath() + " && git init && git add " + addList + " && git commit -m '"
+                          + message + "'";
+        cmd.run(command, false, needElevation());
     } else {
         cmd.run("cd " + QDir::currentPath() + " && git add " + addList + " && git commit -m '" + message + "'", false,
                 needElevation());
@@ -68,9 +68,9 @@ void Git::stash(const QStringList &files)
     if (files.isEmpty()) {
         cmd.run("cd " + QDir::currentPath() + " && git stash", false, needElevation());
     } else {
-        cmd.run("cd " + QDir::currentPath() + " && git stash push " + files.join(' ')
-                    + " -m 'stash created by GUI program'",
-                false, needElevation());
+        QString command = "cd " + QDir::currentPath() + " && git stash push " + files.join(' ')
+                          + " -m 'stash created by GUI program'";
+        cmd.run(command, false, needElevation());
     }
 }
 
@@ -92,9 +92,9 @@ void Git::revertFiles(const QString &commit, const QStringList &files)
     if (files.isEmpty() || commit.isEmpty()) {
         return;
     }
-    cmd.run("cd " + QDir::currentPath() + " && git stash && git checkout " + commit + " -- " + files.join(' ')
-                + " && git commit -m 'Restored files: " + files.join(' ') + "'",
-            false, needElevation());
+    QString command = "cd " + QDir::currentPath() + " && git stash && git checkout " + commit + " -- " + files.join(' ')
+                      + " && git commit -m 'Restored files: " + files.join(' ') + "'";
+    cmd.run(command, false, needElevation());
 }
 
 QString Git::createBackupBranch()
