@@ -169,7 +169,7 @@
          <item row="3" column="3">
           <widget class="QPushButton" name="pushRestore">
            <property name="text">
-            <string>Restore entire snapshot</string>
+            <string>Restore to checkpoint</string>
            </property>
            <property name="autoDefault">
             <bool>false</bool>
@@ -181,7 +181,7 @@
            <property name="orientation">
             <enum>Qt::Horizontal</enum>
            </property>
-           <widget class="QListWidget" name="listSnapshots">
+           <widget class="QListWidget" name="listCheckpoints">
             <property name="alternatingRowColors">
              <bool>false</bool>
             </property>
@@ -225,14 +225,14 @@
          <item row="0" column="0" colspan="2">
           <widget class="QLabel" name="label_2">
            <property name="text">
-            <string>Select snapshot:</string>
+            <string>Select checkpoint:</string>
            </property>
           </widget>
          </item>
          <item row="3" column="0" colspan="2">
           <widget class="QPushButton" name="pushSnapshot">
            <property name="text">
-            <string>Create snapshot for entire directory</string>
+            <string>Create checkpoint for entire directory</string>
            </property>
            <property name="autoDefault">
             <bool>false</bool>
@@ -401,7 +401,7 @@
  <tabstops>
   <tabstop>editCurrentDir</tabstop>
   <tabstop>pushCD</tabstop>
-  <tabstop>listSnapshots</tabstop>
+  <tabstop>listCheckpoints</tabstop>
   <tabstop>listChanges</tabstop>
   <tabstop>pushSnapshot</tabstop>
   <tabstop>pushRestore</tabstop>

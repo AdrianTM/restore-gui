@@ -97,8 +97,8 @@ void MainWindow::setup()
         QIcon::fromTheme("view-refresh-symbolic", QIcon(":/icons/images/view-refresh-symbolic.svg")));
     ui->pushBack->setDisabled(true);
     ui->pushForward->setDisabled(true);
-    ui->pushRestore->setText(tr("Restore entire snapshot"));
-    ui->pushSnapshot->setText(tr("Create snapshot for entire directory"));
+    ui->pushRestore->setText(tr("Restore to selected checkpoint"));
+    ui->pushSnapshot->setText(tr("Create checkpoint for entire directory"));
 }
 
 void MainWindow::editCurrent_done()
@@ -115,14 +115,14 @@ void MainWindow::editCurrent_done()
 void MainWindow::createSnapshot()
 {
     bool isOk {};
-    const QString message = QInputDialog::getText(this, tr("New snapshot"), tr("Enter a snapshot label:"),
+    const QString message = QInputDialog::getText(this, tr("New checkpoint"), tr("Enter a checkpoint label:"),
                                                   QLineEdit::Normal, QString(), &isOk);
 
     if (isOk && !message.isEmpty()) {
-        if (ui->pushSnapshot->text() == tr("Create snapshot for entire directory")) {
+        if (ui->pushSnapshot->text() == tr("Create checkpoint for entire directory")) {
             git->commit(listSelectedFiles(), message);
         }
-        listSnapshots();
+        listCheckpoints();
     }
 }
 
@@ -131,8 +131,8 @@ void MainWindow::onDirChanged()
     // Reset UI state
     ui->listChanges->clear();
     ui->pushRestore->setDisabled(true);
-    ui->pushRestore->setText(tr("Restore entire snapshot"));
-    ui->pushSnapshot->setText(tr("Create snapshot for entire directory"));
+    ui->pushRestore->setText(tr("Restore to selected checkpoint"));
+    ui->pushSnapshot->setText(tr("Create checkpoint for entire directory"));
 
     // Update current directory
     QDir::setCurrent(currentDir.path());
@@ -144,7 +144,7 @@ void MainWindow::onDirChanged()
     ui->pushForward->setDisabled(backHistory.isEmpty());
 
     history.push(currentDir.path());
-    listSnapshots();
+    listCheckpoints();
 }
 
 void MainWindow::setConnections()
@@ -153,7 +153,7 @@ void MainWindow::setConnections()
     connect(this, &MainWindow::dirChanged, this, &MainWindow::onDirChanged);
     connect(ui->editCurrentDir, &QLineEdit::editingFinished, this, &MainWindow::editCurrent_done);
     connect(ui->listChanges, &QListWidget::customContextMenuRequested, this, &MainWindow::contextMenuChanges);
-    connect(ui->listSnapshots, &QListWidget::itemSelectionChanged, this, &MainWindow::snapshotSelection_changed);
+    connect(ui->listCheckpoints, &QListWidget::itemSelectionChanged, this, &MainWindow::checkpointSelection_changed);
 
     // Button clicks
     connect(ui->pushAbout, &QPushButton::clicked, this, &MainWindow::pushAbout_clicked);
@@ -175,13 +175,13 @@ void MainWindow::setConnections()
 void MainWindow::showDiff()
 {
     auto *item = qobject_cast<QCheckBox *>(ui->listChanges->itemWidget(ui->listChanges->currentItem()));
-    if (!ui->listSnapshots->currentItem()) {
+    if (!ui->listCheckpoints->currentItem()) {
         return;
     }
     const QString file = item != nullptr ? item->text().section('\t', 1) : QString();
 
     QDialog dialog(this);
-    dialog.setWindowTitle(file.isEmpty() ? tr("Current ..") + ui->listSnapshots->currentItem()->text() : file);
+    dialog.setWindowTitle(file.isEmpty() ? tr("Current ..") + ui->listCheckpoints->currentItem()->text() : file);
 
     auto *layout = new QVBoxLayout(&dialog);
     auto *textEdit = new QPlainTextEdit(&dialog);
@@ -190,7 +190,7 @@ void MainWindow::showDiff()
     dialog.resize(800, 600);
     dialog.setLayout(layout);
 
-    const QString commit = ui->listSnapshots->currentItem()->data(Qt::UserRole).toString();
+    const QString commit = ui->listCheckpoints->currentItem()->data(Qt::UserRole).toString();
     QProcess proc;
     if (file.isEmpty()) {
         proc.start("git", {"diff", commit});
@@ -246,13 +246,13 @@ void MainWindow::showDiff()
     dialog.adjustSize();
 }
 
-void MainWindow::snapshotSelection_changed()
+void MainWindow::checkpointSelection_changed()
 {
-    ui->pushRestore->setText(tr("Restore entire snapshot"));
-    ui->pushSnapshot->setText(tr("Create snapshot for entire directory"));
+    ui->pushRestore->setText(tr("Restore to selected checkpoint"));
+    ui->pushSnapshot->setText(tr("Create checkpoint for entire directory"));
 
-    const auto selectedItems = ui->listSnapshots->selectedItems();
-    if (!selectedItems.isEmpty() && selectedItems.at(0)->text() != tr("No snapshots")) {
+    const auto selectedItems = ui->listCheckpoints->selectedItems();
+    if (!selectedItems.isEmpty() && selectedItems.at(0)->text() != tr("No checkpoints")) {
         ui->listChanges->clear();
         const auto list = git->getStatus(selectedItems.at(0)->data(Qt::UserRole).toString());
         if (!list.isEmpty()) {
@@ -261,7 +261,7 @@ void MainWindow::snapshotSelection_changed()
     }
 
     const bool noChanges = ui->listChanges->count() == 0
-                           || ui->listChanges->item(0)->text() == tr("*** No changes from latest snapshot ***");
+                           || ui->listChanges->item(0)->text() == tr("*** No changes from latest checkpoint ***");
 
     ui->pushRestore->setDisabled(noChanges);
     ui->pushDiff->setDisabled(noChanges);
@@ -307,14 +307,14 @@ void MainWindow::displayChanges(const QStringList &list)
             const bool isChecked = check->checkState() == Qt::Checked;
             const bool hasSelected = isChecked || anyFileSelected();
 
-            ui->pushSnapshot->setText(hasSelected ? tr("Create snapshot for selected files")
-                                                  : tr("Create snapshot for entire directory"));
-            ui->pushRestore->setText(hasSelected ? tr("Restore selected files") : tr("Restore entire snapshot"));
+            ui->pushSnapshot->setText(hasSelected ? tr("Create checkpoint for selected files")
+                                                  : tr("Create checkpoint for entire directory"));
+            ui->pushRestore->setText(hasSelected ? tr("Restore selected files") : tr("Restore to selected checkpoint"));
         });
     }
 
     if (ui->listChanges->count() == 0) {
-        ui->listChanges->addItem(tr("*** No changes from latest snapshot ***"));
+        ui->listChanges->addItem(tr("*** No changes from latest checkpoint ***"));
         ui->pushDiff->setDisabled(true);
     }
 }
@@ -333,9 +333,9 @@ QStringList MainWindow::listSelectedFiles()
     return selected;
 }
 
-void MainWindow::listSnapshots()
+void MainWindow::listCheckpoints()
 {
-    ui->listSnapshots->clear();
+    ui->listCheckpoints->clear();
     ui->listChanges->clear();
 
     const QStringList list = git->listCommits();
@@ -345,24 +345,24 @@ void MainWindow::listSnapshots()
         for (const QPair<QString, QString> &pair : pairList) {
             auto *item = new QListWidgetItem(pair.second);
             item->setData(Qt::UserRole, pair.first);
-            ui->listSnapshots->addItem(item);
+            ui->listCheckpoints->addItem(item);
         }
     } else {
-        ui->listSnapshots->insertItem(0, tr("No snapshots"));
+        ui->listCheckpoints->insertItem(0, tr("No checkpoints"));
         ui->pushRestore->setDisabled(true);
-        ui->pushRestore->setText(tr("Restore entire snapshot"));
-        ui->pushSnapshot->setText(tr("Create snapshot for entire directory"));
+        ui->pushRestore->setText(tr("Restore to selected checkpoint"));
+        ui->pushSnapshot->setText(tr("Create checkpoint for entire directory"));
     }
 
-    ui->listSnapshots->setCurrentRow(0);
+    ui->listCheckpoints->setCurrentRow(0);
 
     const bool hasModifiedFiles = git->hasModifiedFiles();
     ui->pushSnapshot->setDisabled(!hasModifiedFiles);
     ui->pushSnapshot->setToolTip(
         hasModifiedFiles ? QString()
-                         : tr("Most current snapshot is up-to-date, there's no need to create another snapshot"));
+                         : tr("No changes since last checkpoint, there's no need to create another checkpoint"));
 
-    snapshotSelection_changed();
+    checkpointSelection_changed();
 }
 
 void MainWindow::contextMenuChanges(QPoint pos)
@@ -373,7 +373,7 @@ void MainWindow::contextMenuChanges(QPoint pos)
     }
 
     QMenu contextMenu(this);
-    QAction *actionDiff = contextMenu.addAction(tr("Show diff from selected snapshot to current version"));
+    QAction *actionDiff = contextMenu.addAction(tr("Show diff from selected checkpoint to current version"));
     connect(actionDiff, &QAction::triggered, this, &MainWindow::showDiff);
     contextMenu.exec(ui->listChanges->mapToGlobal(pos));
 }
@@ -385,7 +385,7 @@ void MainWindow::pushAbout_clicked()
         tr("About %1").arg(tr("Restore GUI")),
         R"(<p align="center"><b><h2>Restore GUI</h2></b></p><p align="center">)" + tr("Version: ")
             + QApplication::applicationVersion() + "</p><p align=\"center\"><h3>"
-            + tr("Program that uses underlying git functionality to provide file snapshoting/restoring in a "
+            + tr("Program that uses underlying git functionality to provide file checkpoint/restore in a "
                  "simplified graphical interface.")
             + R"(</h3></p><p align="center"><a href="http://mxlinux.org">http://mxlinux.org</a><br /></p><p align="center">)"
             + tr("Copyright (c) MX Linux") + "<br /><br /></p>",
@@ -429,41 +429,43 @@ void MainWindow::pushUp_clicked()
 
 void MainWindow::restoreSnapshot()
 {
-    const auto response
-        = QMessageBox::question(this, tr("Confirmation"),
-                                tr("Do you want to revert the current changes? Any changes that were not "
-                                   "snapshotted will be lost."));
+    const auto response = QMessageBox::question(
+        this, tr("Confirmation"),
+        tr("Do you want to revert the current changes? Any changes that were not in a checkpoint will be lost."));
 
     if (response != QMessageBox::Yes) {
         return;
     }
 
-    if (ui->listSnapshots->currentRow() == 0) {
+    const QString successTitle = tr("Success");
+    const QString stashMessage
+        = tr("You restored the original version of the files. The files that are not included "
+             "in the checkpoint are 'stashed', preserved with a 'git stash' command, if you need "
+             "to recover those changes see 'git stash --help'");
+
+    // Handle different restore scenarios
+    if (ui->listCheckpoints->currentRow() == 0) {
+        // Restore to clean state
         git->stash(listSelectedFiles());
-        listSnapshots();
-        QMessageBox::information(
-            this, tr("Success"),
-            tr("You restored the original version of the files. Unsnapshotted "
-               "changes are 'stashed', preserved with a 'git stash' command, if you need to recover those changes "
-               "see 'git stash --help'"));
+        QMessageBox::information(this, successTitle, stashMessage);
+    } else {
+        const QString commitId = ui->listCheckpoints->currentItem()->data(Qt::UserRole).toString();
 
-    } else if (ui->pushRestore->text() == tr("Restore entire snapshot")) {
-        const QString backup = git->resetToCommit(ui->listSnapshots->currentItem()->data(Qt::UserRole).toString());
-        QMessageBox::information(this, tr("Success"),
-                                 tr("You restored a previous snapshot, all the subsequent snapshots were backed up to "
-                                    "a git branch named %1")
-                                     .arg(backup));
-
-    } else if (ui->pushRestore->text() == tr("Restore selected files")) {
-        git->revertFiles(ui->listSnapshots->currentItem()->data(Qt::UserRole).toString(), listSelectedFiles());
-        QMessageBox::information(
-            this, tr("Success"),
-            tr("You restored the selected version of the files. Unsnapshotted "
-               "changes are 'stashed', preserved with a 'git stash' command, if you need to recover those changes "
-               "see 'git stash --help'"));
+        if (ui->pushRestore->text() == tr("Restore to selected checkpoint")) {
+            // Reset entire repo to previous checkpoint
+            const QString backup = git->resetToCommit(commitId);
+            QMessageBox::information(this, successTitle,
+                                     tr("You switched to a previous checkpoint, all newer checkpoints were backed up "
+                                        "to a git branch named %1")
+                                         .arg(backup));
+        } else if (ui->pushRestore->text() == tr("Restore selected files")) {
+            // Restore only selected files
+            git->revertFiles(commitId, listSelectedFiles());
+            QMessageBox::information(this, successTitle, stashMessage);
+        }
     }
 
-    listSnapshots();
+    listCheckpoints();
 }
 
 void MainWindow::pushBack_clicked()

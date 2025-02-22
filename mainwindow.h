@@ -53,7 +53,7 @@ private slots:
     void contextMenuChanges(QPoint pos);
     void createSnapshot();
     void editCurrent_done();
-    void listSnapshots();
+    void listCheckpoints();
     void onDirChanged();
     void pushAbout_clicked();
     void pushBack_clicked();
@@ -66,7 +66,7 @@ private slots:
     void restoreSnapshot();
     void setConnections();
     void showDiff();
-    void snapshotSelection_changed();
+    void checkpointSelection_changed();
 
 signals:
     void dirChanged();
