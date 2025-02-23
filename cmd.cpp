@@ -6,10 +6,22 @@
 Cmd::Cmd(QObject *parent)
     : QProcess(parent)
 {
-    connect(this, &Cmd::readyReadStandardOutput, [this] { emit outputAvailable(readAllStandardOutput()); });
-    connect(this, &Cmd::readyReadStandardError, [this] { emit errorAvailable(readAllStandardError()); });
-    connect(this, &Cmd::outputAvailable, [this](const QString &out) { out_buffer += out; });
-    connect(this, &Cmd::errorAvailable, [this](const QString &out) { out_buffer += out; });
+    connect(this, &Cmd::readyReadStandardOutput, this, &Cmd::handleStandardOutput);
+    connect(this, &Cmd::readyReadStandardError, this, &Cmd::handleStandardError);
+}
+
+void Cmd::handleStandardOutput()
+{
+    const QString output = readAllStandardOutput();
+    emit outputAvailable(output);
+    out_buffer += output;
+}
+
+void Cmd::handleStandardError()
+{
+    const QString error = readAllStandardError();
+    emit errorAvailable(error);
+    out_buffer += error;
 }
 
 bool Cmd::run(const QString &cmd, bool quiet, bool elevate)
@@ -29,19 +41,36 @@ bool Cmd::run(const QString &cmd, QString *output, bool quiet, bool elevate)
 {
     out_buffer.clear();
     connect(this, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished), this, &Cmd::finished);
+
     if (this->state() != QProcess::NotRunning) {
-        qDebug() << "Process already running:" << this->program() << this->arguments();
+        qWarning() << "Process already running:" << this->program() << this->arguments();
         return false;
     }
-    if (!quiet)
+
+    if (!quiet) {
         qDebug().noquote() << cmd;
+    }
+
     QEventLoop loop;
     connect(this, &Cmd::finished, &loop, &QEventLoop::quit);
-    if (elevate)
-        start("pkexec", {"/bin/bash", "-c", cmd});
-    else
-        start("/bin/bash", {"-c", cmd});
+
+    const QString program = elevate ? "pkexec" : "bash";
+    const QStringList args = elevate ? QStringList {"bash", "-c", cmd} : QStringList {"-c", cmd};
+    start(program, args);
     loop.exec();
+    disconnect(this, nullptr, &loop, nullptr);
+
     *output = out_buffer.trimmed();
-    return (exitStatus() == QProcess::NormalExit && exitCode() == 0);
+
+    if (exitStatus() != QProcess::NormalExit) {
+        qWarning() << "Process exited abnormally";
+        return false;
+    }
+
+    if (exitCode() != 0) {
+        qWarning() << "Exit code:" << exitCode();
+        return false;
+    }
+
+    return true;
 }

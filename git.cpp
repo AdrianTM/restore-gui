@@ -29,49 +29,44 @@
 Git::Git(QObject *parent)
     : QObject(parent)
 {
+    // Set busy cursor during git operations
     connect(&cmd, &Cmd::started, [] { QApplication::setOverrideCursor(QCursor(Qt::BusyCursor)); });
     connect(&cmd, &Cmd::finished, [] { QApplication::setOverrideCursor(QCursor(Qt::ArrowCursor)); });
 }
 
 void Git::add(const QStringList &files)
 {
-    if (files.size() == 1 && files.at(0) == '.') {
-        cmd.run("git add .", false, needElevation());
-    } else {
-        cmd.run("git add " + files.join(' '), false, needElevation());
-    }
+    // Handle both single file and multiple files cases
+    const QString command = (files.size() == 1 && files.at(0) == ".") ? "git add ." : "git add " + files.join(' ');
+    cmd.run(command, false, needElevation());
 }
 
 void Git::commit(const QStringList &files, const QString &message)
 {
-    const QString &addList = files.isEmpty() ? "." : files.join(' ');
+    const QString addList = files.isEmpty() ? "." : files.join(' ');
+
     if (!isInitialized()) {
-        if (isLargeDirectory()) {
-            if (QMessageBox::No
-                == QMessageBox::question(nullptr, tr("Confirmation"),
-                                         tr("You are trying to snapshot a large folder, are you sure? If you select "
-                                            "'Yes' it might take a long time to process."))) {
-                return;
-            }
+        // Warn user before initializing git in large directories
+        if (isLargeDirectory()
+            && QMessageBox::No
+                   == QMessageBox::question(nullptr, tr("Confirmation"),
+                                            tr("You are trying to snapshot a large folder, are you sure? If you select "
+                                               "'Yes' it might take a long time to process."))) {
+            return;
         }
-        QString command = "cd " + QDir::currentPath() + " && git init && git add " + addList + " && git commit -m '"
-                          + message + "'";
-        cmd.run(command, false, needElevation());
+        // Initialize repository and make first commit
+        cmd.run("git init && git add " + addList + " && git commit -m '" + message + "'", false, needElevation());
     } else {
-        cmd.run("cd " + QDir::currentPath() + " && git add " + addList + " && git commit -m '" + message + "'", false,
-                needElevation());
+        // Regular commit
+        cmd.run("git add " + addList + " && git commit -m '" + message + "'", false, needElevation());
     }
 }
 
 void Git::stash(const QStringList &files)
 {
-    if (files.isEmpty()) {
-        cmd.run("cd " + QDir::currentPath() + " && git stash", false, needElevation());
-    } else {
-        QString command = "cd " + QDir::currentPath() + " && git stash push " + files.join(' ')
-                          + " -m 'stash created by GUI program'";
-        cmd.run(command, false, needElevation());
-    }
+    const QString command
+        = files.isEmpty() ? "git stash" : "git stash push " + files.join(' ') + " -m 'stash created by GUI program'";
+    cmd.run(command, false, needElevation());
 }
 
 // Stash, branch, and reset
@@ -81,8 +76,7 @@ QString Git::resetToCommit(const QString &commit)
     if (commit.isEmpty()) {
         return {};
     }
-    cmd.run("cd " + QDir::currentPath() + " && git stash && git branch " + name + " && git reset --hard " + commit,
-            false, needElevation());
+    cmd.run("git stash && git branch " + name + " && git reset --hard " + commit, false, needElevation());
     return name;
 }
 
@@ -92,15 +86,15 @@ void Git::revertFiles(const QString &commit, const QStringList &files)
     if (files.isEmpty() || commit.isEmpty()) {
         return;
     }
-    QString command = "cd " + QDir::currentPath() + " && git stash && git checkout " + commit + " -- " + files.join(' ')
+    QString command = "git stash && git checkout " + commit + " -- " + files.join(' ')
                       + " && git commit -m 'Restored files: " + files.join(' ') + "'";
     cmd.run(command, false, needElevation());
 }
 
 QString Git::createBackupBranch()
 {
-    const QString &name = "bak_" + QDateTime::currentDateTime().toString(QStringLiteral("yyyyMMdd_HHmmss"));
-    cmd.run("cd " + QDir::currentPath() + " && git branch " + name, false, needElevation());
+    const QString name = "bak_" + QDateTime::currentDateTime().toString(QStringLiteral("yyyyMMdd_HHmmss"));
+    cmd.run("git branch " + name, false, needElevation());
     return name;
 }
 
@@ -127,7 +121,7 @@ bool Git::hasModifiedFiles()
 
 bool Git::initialize()
 {
-    return cmd.run("cd " + QDir::currentPath() + "&& git init", false, needElevation());
+    return cmd.run("git init", false, needElevation());
 }
 
 bool Git::isInitialized()
@@ -137,7 +131,7 @@ bool Git::isInitialized()
 
 bool Git::needElevation()
 {
-    return (!QFileInfo(QDir::currentPath() + "/.").isWritable());
+    return !QFileInfo(QDir::currentPath() + "/.").isWritable();
 }
 
 QString Git::getCurrentBranch()

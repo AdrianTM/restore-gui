@@ -22,6 +22,9 @@ signals:
 
 private:
     QString out_buffer;
+
+    void handleStandardError();
+    void handleStandardOutput();
 };
 
 #endif // CMD_H

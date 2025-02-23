@@ -45,13 +45,13 @@ MainWindow::MainWindow(const QCommandLineParser &arg_parser, QWidget *parent)
 {
     ui->setupUi(this);
     const auto &arg_list = arg_parser.positionalArguments();
-    if (!arg_list.empty()) {
-        if (QFileInfo::exists(arg_list.first())) {
-            currentDir.setPath(arg_list.first());
-        }
+    if (!arg_list.empty() && QFileInfo::exists(arg_list.first())) {
+        currentDir.setPath(arg_list.first());
     }
-    setWindowFlags(Qt::Window); // for the close, min and max buttons
 
+    setWindowFlags(Qt::Window); // Enable window controls
+
+    // Restore window geometry
     const QSize size = this->size();
     if (settings.contains(QStringLiteral("geometry"))) {
         restoreGeometry(settings.value(QStringLiteral("geometry")).toByteArray());
@@ -83,18 +83,26 @@ void MainWindow::centerWindow()
 void MainWindow::setup()
 {
     this->adjustSize();
+
+    // Set monospace font for changes list
     QFont font(QStringLiteral("monospace"));
     font.setStyleHint(QFont::Monospace);
     ui->listChanges->setFont(font);
+
+    // Initialize UI elements
     ui->editCurrentDir->setText(currentDir.path());
     onDirChanged();
     ui->editCurrentDir->setFocus();
     ui->pushCancel->setEnabled(true);
+
+    // Set icons for navigation buttons
     ui->pushUp->setIcon(QIcon::fromTheme("go-up-symbolic", QIcon(":/icons/images/go-up-symbolic.svg")));
     ui->pushBack->setIcon(QIcon::fromTheme("go-previous-symbolic", QIcon(":/icons/images/go-previous-symbolic.svg")));
     ui->pushForward->setIcon(QIcon::fromTheme("go-next-symbolic", QIcon(":/icons/images/go-next-symbolic.svg")));
     ui->pushRefresh->setIcon(
         QIcon::fromTheme("view-refresh-symbolic", QIcon(":/icons/images/view-refresh-symbolic.svg")));
+
+    // Initialize button states
     ui->pushBack->setDisabled(true);
     ui->pushForward->setDisabled(true);
     ui->pushRestore->setText(tr("Restore to selected checkpoint"));
@@ -174,14 +182,17 @@ void MainWindow::setConnections()
 
 void MainWindow::showDiff()
 {
-    auto *item = qobject_cast<QCheckBox *>(ui->listChanges->itemWidget(ui->listChanges->currentItem()));
-    if (!ui->listCheckpoints->currentItem()) {
-        return;
+    QStringList files;
+    for (int i = 0; i < ui->listChanges->count(); i++) {
+        auto *item = qobject_cast<QCheckBox *>(ui->listChanges->itemWidget(ui->listChanges->item(i)));
+        if (item && item->isChecked()) {
+            files.append(item->text().section('\t', 1));
+        }
     }
-    const QString file = item != nullptr ? item->text().section('\t', 1) : QString();
 
     QDialog dialog(this);
-    dialog.setWindowTitle(file.isEmpty() ? tr("Current ..") + ui->listCheckpoints->currentItem()->text() : file);
+    dialog.setWindowTitle(files.isEmpty() ? tr("Current .. ") + ui->listCheckpoints->currentItem()->text()
+                                          : files.join(" "));
 
     auto *layout = new QVBoxLayout(&dialog);
     auto *textEdit = new QPlainTextEdit(&dialog);
@@ -192,13 +203,20 @@ void MainWindow::showDiff()
 
     const QString commit = ui->listCheckpoints->currentItem()->data(Qt::UserRole).toString();
     QProcess proc;
-    if (file.isEmpty()) {
-        proc.start("git", {"diff", commit});
-    } else {
-        proc.start("git", {"diff", commit, file});
+    QStringList args = {"diff", "--color=never", commit};
+    args.append(files);
+    proc.start("git", args);
+    if (!proc.waitForFinished()) {
+        textEdit->setPlainText(tr("Error running git diff command"));
+        return;
     }
-    proc.waitForFinished();
-    textEdit->setPlainText(QString::fromUtf8(proc.readAllStandardOutput()));
+    const QByteArray output = proc.readAllStandardOutput();
+    const QByteArray error = proc.readAllStandardError();
+    if (proc.exitCode() != 0) {
+        textEdit->setPlainText(tr("Git diff failed:\n%1").arg(QString::fromUtf8(error)));
+        return;
+    }
+    textEdit->setPlainText(QString::fromUtf8(output));
 
     QFont font(QStringLiteral("monospace"));
     font.setStyleHint(QFont::Monospace);
