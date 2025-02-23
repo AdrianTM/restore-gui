@@ -62,6 +62,20 @@ void Git::commit(const QStringList &files, const QString &message)
     }
 }
 
+void Git::popStash()
+{
+    cmd.run("git stash pop", false, needElevation());
+}
+
+void Git::rebaseToPrevious(const QString &commit)
+{
+    if (commit.isEmpty()) {
+        return;
+    }
+    const QString command = QString("git rebase --onto $(git rev-parse %1^) %1").arg(commit);
+    cmd.run(command, false, needElevation());
+}
+
 void Git::stash(const QStringList &files)
 {
     const QString command

@@ -168,6 +168,7 @@ void MainWindow::setConnections()
     connect(ui->pushBack, &QPushButton::clicked, this, &MainWindow::pushBack_clicked);
     connect(ui->pushCD, &QPushButton::clicked, this, &MainWindow::pushCD_clicked);
     connect(ui->pushCancel, &QPushButton::pressed, this, &MainWindow::close);
+    connect(ui->pushDelete, &QPushButton::pressed, this, &MainWindow::pushDelete_clicked);
     connect(ui->pushDiff, &QPushButton::pressed, this, &MainWindow::pushDiff_clicked);
     connect(ui->pushForward, &QPushButton::clicked, this, &MainWindow::pushForward_clicked);
     connect(ui->pushHelp, &QPushButton::clicked, this, &MainWindow::pushHelp_clicked);
@@ -420,6 +421,15 @@ void MainWindow::pushCD_clicked()
         currentDir.setPath(selected);
         emit dirChanged();
     }
+}
+
+void MainWindow::pushDelete_clicked()
+{
+    const QString commitId = ui->listCheckpoints->currentItem()->data(Qt::UserRole).toString();
+    git->stash();
+    git->rebaseToPrevious(commitId);
+    git->popStash();
+    onDirChanged();
 }
 
 void MainWindow::pushDiff_clicked()

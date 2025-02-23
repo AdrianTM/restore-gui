@@ -40,8 +40,10 @@ public:
     static bool needElevation();
     void add(const QStringList &files);
     void commit(const QStringList &files, const QString &message);
+    void popStash();
+    void rebaseToPrevious(const QString &commit);
     void revertFiles(const QString &commit, const QStringList &files);
-    void stash(const QStringList &files);
+    void stash(const QStringList &files = QStringList());
 
 private:
     Cmd cmd;
