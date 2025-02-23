@@ -168,7 +168,7 @@ void MainWindow::setConnections()
     connect(ui->pushBack, &QPushButton::clicked, this, &MainWindow::pushBack_clicked);
     connect(ui->pushCD, &QPushButton::clicked, this, &MainWindow::pushCD_clicked);
     connect(ui->pushCancel, &QPushButton::pressed, this, &MainWindow::close);
-    connect(ui->pushDelete, &QPushButton::pressed, this, &MainWindow::pushDelete_clicked);
+    // connect(ui->pushDelete, &QPushButton::pressed, this, &MainWindow::pushDelete_clicked);
     connect(ui->pushDiff, &QPushButton::pressed, this, &MainWindow::pushDiff_clicked);
     connect(ui->pushForward, &QPushButton::clicked, this, &MainWindow::pushForward_clicked);
     connect(ui->pushHelp, &QPushButton::clicked, this, &MainWindow::pushHelp_clicked);

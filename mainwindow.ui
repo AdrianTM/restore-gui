@@ -166,16 +166,30 @@
          <enum>QFrame::Raised</enum>
         </property>
         <layout class="QGridLayout" name="gridLayout_2">
-         <item row="0" column="2" colspan="2">
-          <widget class="QLabel" name="label">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
+         <item row="3" column="0" colspan="2">
+          <widget class="QPushButton" name="pushSnapshot">
            <property name="text">
-            <string>Changed files:</string>
+            <string>Create checkpoint for entire directory</string>
+           </property>
+           <property name="autoDefault">
+            <bool>false</bool>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="0" colspan="2">
+          <widget class="QLabel" name="label_2">
+           <property name="text">
+            <string>Select checkpoint:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="3">
+          <widget class="QPushButton" name="pushRestore">
+           <property name="text">
+            <string>Restore to checkpoint</string>
+           </property>
+           <property name="autoDefault">
+            <bool>false</bool>
            </property>
           </widget>
          </item>
@@ -217,20 +231,16 @@
            </widget>
           </widget>
          </item>
-         <item row="3" column="3">
-          <widget class="QPushButton" name="pushRestore">
-           <property name="text">
-            <string>Restore to checkpoint</string>
+         <item row="0" column="2" colspan="2">
+          <widget class="QLabel" name="label">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
            </property>
-           <property name="autoDefault">
-            <bool>false</bool>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="0" colspan="2">
-          <widget class="QLabel" name="label_2">
            <property name="text">
-            <string>Select checkpoint:</string>
+            <string>Changed files:</string>
            </property>
           </widget>
          </item>
@@ -241,23 +251,6 @@
            </property>
            <property name="autoDefault">
             <bool>false</bool>
-           </property>
-          </widget>
-         </item>
-         <item row="3" column="0" colspan="2">
-          <widget class="QPushButton" name="pushSnapshot">
-           <property name="text">
-            <string>Create checkpoint for entire directory</string>
-           </property>
-           <property name="autoDefault">
-            <bool>false</bool>
-           </property>
-          </widget>
-         </item>
-         <item row="4" column="0">
-          <widget class="QPushButton" name="pushDelete">
-           <property name="text">
-            <string>Delete checkpoint</string>
            </property>
           </widget>
          </item>
