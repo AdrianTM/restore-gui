@@ -35,6 +35,7 @@
 #include <QScrollBar>
 #include <QTextBlock>
 #include <QTextStream>
+#include <QTimer>
 
 #include "about.h"
 
@@ -62,6 +63,11 @@ MainWindow::MainWindow(const QCommandLineParser &arg_parser, QWidget *parent)
     }
 
     setConnections();
+
+    if (!checkGitConfig()) {
+        QTimer::singleShot(0, this, [this] { QApplication::exit(1); });
+        return;
+    }
     setup();
 }
 
@@ -70,6 +76,47 @@ MainWindow::~MainWindow()
     settings.setValue(QStringLiteral("geometry"), saveGeometry());
     delete git;
     delete ui;
+}
+
+bool MainWindow::checkGitConfig()
+{
+    QString user = git->getUserGit();
+    QString email = git->getEmailGit();
+
+    if (user.isEmpty() || email.isEmpty()) {
+        bool inputAccepted = false;
+
+        while (user.isEmpty()) {
+            QString name = QInputDialog::getText(this, tr("Git Configuration"), tr("Enter your name:"),
+                                                 QLineEdit::Normal, "", &inputAccepted);
+            if (inputAccepted && !name.isEmpty()) {
+                git->setUserGit(name);
+                user = name;
+            } else {
+                break;
+            }
+        }
+
+        while (email.isEmpty()) {
+            QString emailInput = QInputDialog::getText(this, tr("Git Configuration"), tr("Enter your email:"),
+                                                       QLineEdit::Normal, "", &inputAccepted);
+            if (inputAccepted && !emailInput.isEmpty()) {
+                git->setEmailGit(emailInput);
+                email = emailInput;
+            } else {
+                break;
+            }
+        }
+
+        // Final verification of required Git configuration
+        if (user.isEmpty() || email.isEmpty()) {
+            QMessageBox::critical(this, tr("Configuration Required"),
+                                  tr("Git name and email are required to use this program.\n"
+                                     "Please configure them in your Git settings."));
+            return false;
+        }
+    }
+    return true;
 }
 
 void MainWindow::centerWindow()

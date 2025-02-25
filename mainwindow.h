@@ -81,10 +81,11 @@ private:
     QStack<QString> backHistory;
     QDir currentDir {QDir::current()};
 
-    bool anyFileSelected();
-    static QVector<QPair<QString, QString>> splitLog(const QStringList &log);
+    [[nodiscard]] QStringList listSelectedFiles();
+    [[nodiscard]] bool anyFileSelected();
+    [[nodiscard]] bool checkGitConfig();
+    [[nodiscard]] static QVector<QPair<QString, QString>> splitLog(const QStringList &log);
     void displayChanges(const QStringList &list);
-    QStringList listSelectedFiles();
 };
 
 #endif

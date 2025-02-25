@@ -32,25 +32,30 @@ class Git : public QObject
     Q_OBJECT
 public:
     explicit Git(QObject *parent = nullptr);
-    QString createBackupBranch();
-    QString resetToCommit(const QString &commit);
-    QStringList getStatus(const QString &commit);
-    QStringList listCommits();
-    bool hasModifiedFiles();
-    static bool needElevation();
+    [[nodiscard]] QString createBackupBranch();
+    [[nodiscard]] QString getEmailGit();
+    [[nodiscard]] QString getUserGit();
+    [[nodiscard]] QString resetToCommit(const QString &commit);
+    [[nodiscard]] QStringList getStatus(const QString &commit);
+    [[nodiscard]] bool hasModifiedFiles();
+    [[nodiscard]] static bool needElevation();
+    [[nodiscard]] QStringList listCommits();
     void add(const QStringList &files);
     void commit(const QStringList &files, const QString &message);
     void popStash();
     void rebaseToPrevious(const QString &commit);
     void revertFiles(const QString &commit, const QStringList &files);
+    void setEmailGit(const QString &email);
+    void setUserGit(const QString &name);
     void stash(const QStringList &files = QStringList());
 
 private:
     Cmd cmd;
-    QString getCurrentBranch();
-    bool initialize();
-    static bool isInitialized();
-    bool isLargeDirectory();
+
+    [[nodiscard]] QString getCurrentBranch();
+    [[nodiscard]] bool initialize();
+    [[nodiscard]] static bool isInitialized();
+    [[nodiscard]] bool isLargeDirectory();
 };
 
 #endif // GIT_H

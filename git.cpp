@@ -105,6 +105,16 @@ void Git::revertFiles(const QString &commit, const QStringList &files)
     cmd.run(command, false, needElevation());
 }
 
+void Git::setEmailGit(const QString &email)
+{
+    cmd.run("git config --global user.email '" + email + "'");
+}
+
+void Git::setUserGit(const QString &name)
+{
+    cmd.run("git config --global user.name '" + name + "'");
+}
+
 QString Git::createBackupBranch()
 {
     const QString name = "bak_" + QDateTime::currentDateTime().toString(QStringLiteral("yyyyMMdd_HHmmss"));
@@ -112,9 +122,19 @@ QString Git::createBackupBranch()
     return name;
 }
 
+QString Git::getEmailGit()
+{
+    return cmd.getCmdOut("git config --global --get user.email 2>/dev/null", true);
+}
+
+QString Git::getUserGit()
+{
+    return cmd.getCmdOut("git config --global --get user.name 2>/dev/null", true);
+}
+
 QStringList Git::getStatus(const QString &commit)
 {
-    return cmd.getCmdOut("git diff --name-status " + commit).split('\n');
+    return cmd.getCmdOut("git diff --name-status " + commit + " 2>/dev/null", true).split('\n');
 }
 
 QStringList Git::listCommits()
@@ -122,7 +142,7 @@ QStringList Git::listCommits()
     if (!isInitialized()) {
         return {};
     }
-    return cmd.getCmdOut("git log --pretty=format:'%h|%cr - %s'").split('\n');
+    return cmd.getCmdOut("git log --pretty=format:'%h|%cr - %s' 2>/dev/null", true).split('\n');
 }
 
 bool Git::hasModifiedFiles()
@@ -130,7 +150,7 @@ bool Git::hasModifiedFiles()
     if (!isInitialized()) {
         return true;
     }
-    return !cmd.getCmdOut("git status --porcelain").isEmpty();
+    return !cmd.getCmdOut("git status --porcelain 2>/dev/null", true).isEmpty();
 }
 
 bool Git::initialize()
