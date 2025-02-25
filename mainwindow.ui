@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1103</width>
+    <width>1164</width>
     <height>634</height>
    </rect>
   </property>
@@ -166,33 +166,6 @@
          <enum>QFrame::Raised</enum>
         </property>
         <layout class="QGridLayout" name="gridLayout_2">
-         <item row="3" column="0" colspan="2">
-          <widget class="QPushButton" name="pushSnapshot">
-           <property name="text">
-            <string>Create checkpoint for entire directory</string>
-           </property>
-           <property name="autoDefault">
-            <bool>false</bool>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="0" colspan="2">
-          <widget class="QLabel" name="label_2">
-           <property name="text">
-            <string>Select checkpoint:</string>
-           </property>
-          </widget>
-         </item>
-         <item row="3" column="3">
-          <widget class="QPushButton" name="pushRestore">
-           <property name="text">
-            <string>Restore to checkpoint</string>
-           </property>
-           <property name="autoDefault">
-            <bool>false</bool>
-           </property>
-          </widget>
-         </item>
          <item row="1" column="0" rowspan="2" colspan="4">
           <widget class="QSplitter" name="splitter">
            <property name="orientation">
@@ -231,6 +204,33 @@
            </widget>
           </widget>
          </item>
+         <item row="3" column="3">
+          <widget class="QPushButton" name="pushRestore">
+           <property name="text">
+            <string>Restore to checkpoint</string>
+           </property>
+           <property name="autoDefault">
+            <bool>false</bool>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="0" colspan="2">
+          <widget class="QLabel" name="label_2">
+           <property name="text">
+            <string>Select checkpoint:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="2">
+          <widget class="QPushButton" name="pushDiff">
+           <property name="text">
+            <string>Show diff</string>
+           </property>
+           <property name="autoDefault">
+            <bool>false</bool>
+           </property>
+          </widget>
+         </item>
          <item row="0" column="2" colspan="2">
           <widget class="QLabel" name="label">
            <property name="sizePolicy">
@@ -244,10 +244,20 @@
            </property>
           </widget>
          </item>
-         <item row="3" column="2">
-          <widget class="QPushButton" name="pushDiff">
+         <item row="3" column="0">
+          <widget class="QPushButton" name="pushSnapshot">
            <property name="text">
-            <string>Show diff</string>
+            <string>Create checkpoint for entire directory</string>
+           </property>
+           <property name="autoDefault">
+            <bool>false</bool>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="1">
+          <widget class="QPushButton" name="pushSchedule">
+           <property name="text">
+            <string>Schedule automatic checkpoints</string>
            </property>
            <property name="autoDefault">
             <bool>false</bool>

@@ -19,7 +19,7 @@
 # **********************************************************************/
 
 QT       += core gui widgets
-CONFIG   += debug_and_release warn_on strict_c++ c++17
+CONFIG   += debug_and_release warn_on strict_c c++17
 
 CONFIG(release, debug|release) {
     DEFINES += NDEBUG
@@ -71,4 +71,3 @@ TRANSLATIONS += translations/restore-gui_ca.ts \
 
 RESOURCES += \
     images.qrc
-

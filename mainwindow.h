@@ -63,6 +63,7 @@ private slots:
     void pushForward_clicked();
     void pushHelp_clicked();
     void pushRefresh_clicked();
+    void pushSchedule_clicked();
     void pushUp_clicked();
     void restoreSnapshot();
     void setConnections();

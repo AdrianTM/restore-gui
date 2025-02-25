@@ -22,20 +22,12 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
-#include <QAction>
-#include <QCheckBox>
 #include <QDebug>
 #include <QDirIterator>
-#include <QFileDialog>
-#include <QInputDialog>
-#include <QMenu>
 #include <QPair>
-#include <QPlainTextEdit>
-#include <QScreen>
-#include <QScrollBar>
 #include <QTextBlock>
 #include <QTextStream>
-#include <QTimer>
+#include <QtWidgets>
 
 #include "about.h"
 
@@ -221,6 +213,7 @@ void MainWindow::setConnections()
     connect(ui->pushHelp, &QPushButton::clicked, this, &MainWindow::pushHelp_clicked);
     connect(ui->pushRefresh, &QPushButton::clicked, this, &MainWindow::pushRefresh_clicked);
     connect(ui->pushRestore, &QPushButton::clicked, this, &MainWindow::restoreSnapshot);
+    connect(ui->pushSchedule, &QPushButton::clicked, this, &MainWindow::pushSchedule_clicked);
     connect(ui->pushSnapshot, &QPushButton::clicked, this, &MainWindow::createSnapshot);
     connect(ui->pushUp, &QPushButton::clicked, this, &MainWindow::pushUp_clicked);
 
@@ -493,6 +486,137 @@ void MainWindow::pushHelp_clicked()
 void MainWindow::pushRefresh_clicked()
 {
     onDirChanged();
+}
+
+void MainWindow::pushSchedule_clicked()
+{
+    QDialog dialog(this);
+    dialog.setWindowTitle(tr("Schedule Options"));
+    dialog.setMinimumWidth(400);
+
+    auto *layout = new QVBoxLayout(&dialog);
+    layout->setContentsMargins(10, 10, 10, 10);
+
+    // Add description text
+    auto *descriptionLabel = new QLabel(
+        tr("<p>Checkpoints will be created for all modified files in the directory (including subdirectories) "
+           "with the selected frequency.</p>"
+           "<b>No checkpoint will be created if there are no changes.</b>"),
+        &dialog);
+    descriptionLabel->setWordWrap(true);
+    descriptionLabel->setStyleSheet("QLabel { margin: 5px; color: #444; }");
+    layout->addWidget(descriptionLabel);
+
+    // Schedule options group
+    auto *groupBox = new QGroupBox(tr("Schedule Frequency:"), &dialog);
+    auto *vbox = new QVBoxLayout;
+    vbox->setSpacing(8);
+    vbox->setContentsMargins(5, 10, 5, 10);
+
+    const QVector<QPair<QString, QString>> options = {{tr("None (Remove scheduled checkpoints)"), "none"},
+                                                      {tr("At reboot"), "@reboot"},
+                                                      {tr("Hourly"), "0 * * * *"},
+                                                      {tr("Daily"), "0 0 * * *"},
+                                                      {tr("Weekly"), "0 0 * * 0"}};
+
+    QButtonGroup *buttonGroup = new QButtonGroup(&dialog);
+    QString currentPattern;
+
+    if (git->needElevation()) {
+        currentPattern = Cmd()
+                             .getCmdOut("cat /etc/cron.d/restore-gui | grep 'cd " + currentDir.path()
+                                            + " && git add . && git commit -m "
+                                              "\"Scheduled checkpoint\"' | cut -d' ' -f1-5",
+                                        true, true)
+                             .trimmed();
+    } else {
+        currentPattern
+            = Cmd()
+                  .getCmdOut("crontab -l | grep 'cd " + currentDir.path()
+                                 + " && git add . && git commit -m \"Scheduled checkpoint\"' | cut -d' ' -f1-5",
+                             true)
+                  .trimmed();
+    }
+    if (currentPattern.startsWith("@reboot")) {
+        currentPattern = "@reboot";
+    }
+
+    if (currentPattern.isEmpty()) {
+        currentPattern = "none";
+    }
+
+    for (const auto &[label, pattern] : options) {
+        auto *radio = new QRadioButton(label, groupBox);
+        radio->setProperty("cronPattern", pattern);
+        vbox->addWidget(radio);
+        buttonGroup->addButton(radio);
+        if (pattern == currentPattern) {
+            radio->setChecked(true);
+        }
+    }
+
+    groupBox->setLayout(vbox);
+    layout->addWidget(groupBox);
+
+    // Add buttons
+    auto *buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, &dialog);
+    buttonBox->setCenterButtons(true);
+    connect(buttonBox, &QDialogButtonBox::accepted, &dialog, &QDialog::accept);
+    connect(buttonBox, &QDialogButtonBox::rejected, &dialog, &QDialog::reject);
+    layout->addSpacing(10);
+    layout->addWidget(buttonBox);
+
+    if (dialog.exec() == QDialog::Accepted) {
+        QRadioButton *selectedRadio = qobject_cast<QRadioButton *>(buttonGroup->checkedButton());
+        if (!selectedRadio) {
+            qDebug() << "No radio button selected";
+            return;
+        }
+
+        const QString selectedPattern = selectedRadio->property("cronPattern").toString();
+        if (selectedPattern.isEmpty()) {
+            qDebug() << "Invalid cron pattern";
+            return;
+        }
+
+        const QString currentPath = currentDir.path();
+        if (currentPath.isEmpty()) {
+            qDebug() << "Invalid current path";
+            return;
+        }
+
+        QString command;
+        bool success = false;
+
+        // Remove schedule first for currentDir
+        command = git->needElevation() ? QString("sed -i '/cd %1/d' /etc/cron.d/restore-gui").arg(currentPath)
+                                       : QString("crontab -l 2>/dev/null | grep -v 'cd %1 && git add . && git commit "
+                                                 "-m \"Scheduled checkpoint\"' | crontab -")
+                                             .arg(currentPath);
+        success = Cmd().run(command, false, git->needElevation());
+
+        // Add schedule
+        if (selectedPattern != "none") {
+            const QString cronCommand = QString("%1 cd %2 && git add . && git commit -m \"Scheduled checkpoint\"")
+                                            .arg(selectedPattern, currentPath);
+            command = git->needElevation()
+                          ? QString("echo '%1' | sudo tee -a /etc/cron.d/restore-gui").arg(cronCommand)
+                          : QString("(crontab -l 2>/dev/null; echo '%1') | crontab -").arg(cronCommand);
+            success = Cmd().run(command, false, git->needElevation());
+        }
+
+        const QString message
+            = success ? tr("Scheduled checkpoints have been %1.")
+                            .arg(selectedPattern == "none" ? tr("removed") : tr("configured successfully"))
+                      : tr("Failed to %1 scheduled checkpoints.")
+                            .arg(selectedPattern == "none" ? tr("remove") : tr("set up"));
+
+        QMessageBox msgBox(this);
+        msgBox.setWindowTitle(success ? tr("Success") : tr("Error"));
+        msgBox.setText(message);
+        msgBox.setIcon(success ? QMessageBox::Information : QMessageBox::Warning);
+        msgBox.exec();
+    }
 }
 
 void MainWindow::pushUp_clicked()
