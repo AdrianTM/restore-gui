@@ -589,7 +589,9 @@ void MainWindow::pushSchedule_clicked()
         bool success = false;
 
         // Remove schedule first for currentDir
-        command = git->needElevation() ? QString("sed -i '/cd %1/d' /etc/cron.d/restore-gui").arg(currentPath)
+        QString escapedPath = currentPath;
+        escapedPath.replace("/", "\\/");
+        command = git->needElevation() ? QString("sed -i '/cd %1/d' /etc/cron.d/restore-gui").arg(escapedPath)
                                        : QString("crontab -l 2>/dev/null | grep -v 'cd %1 && git add . && git commit "
                                                  "-m \"Scheduled checkpoint\"' | crontab -")
                                              .arg(currentPath);
