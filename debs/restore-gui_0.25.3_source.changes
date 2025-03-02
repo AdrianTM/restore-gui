@@ -1,0 +1,40 @@
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA512
+
+Format: 1.8
+Date: Sun, 02 Mar 2025 12:11:39 -0500
+Source: restore-gui
+Architecture: source
+Version: 0.25.3
+Distribution: UNRELEASED
+Urgency: medium
+Maintainer: Adrian <adrian@mxlinux.org>
+Changed-By: Adrian <adrian@mxlinux.org>
+Changes:
+ restore-gui (0.25.3) UNRELEASED; urgency=medium
+ .
+   * Test build
+Checksums-Sha1:
+ 7233f1b59d7e5f6e23bbdff19003f4c37539cb62 1122 restore-gui_0.25.3.dsc
+ 378419431709521932b08d29142126d0b168e054 31296 restore-gui_0.25.3.tar.xz
+ 5fd0e5df3c73cd9e9b439f07cb0315b2e3f4dfc0 11073 restore-gui_0.25.3_amd64.buildinfo
+Checksums-Sha256:
+ 9e1bfc9b1691e3e0790596f55aced16d915981ffba69a65a42cfe7b60515ae87 1122 restore-gui_0.25.3.dsc
+ 20d02afa05a941aa5463896389d0e35f09a09e3d270d03c0b103caaf7e8fe52a 31296 restore-gui_0.25.3.tar.xz
+ 8a6ab7d21b106af859858ef6cd2fd178977a508d5fd3c9654b448185b2f170c7 11073 restore-gui_0.25.3_amd64.buildinfo
+Files:
+ 4b1a449954f25b05cde684a60b30f0c8 1122 admin optional restore-gui_0.25.3.dsc
+ d96e4ec75ae1324a5f8d1405a018408b 31296 admin optional restore-gui_0.25.3.tar.xz
+ 108b197db4880b73e2d13be8bab32fc1 11073 admin optional restore-gui_0.25.3_amd64.buildinfo
+
+-----BEGIN PGP SIGNATURE-----
+
+iQFHBAEBCgAxFiEE8ndToY6S45N+YzXncJOMeAZ57pgFAmfEpYMTHGFkcmlhbkBt
+eGxpbnV4Lm9yZwAKCRBwk4x4BnnumA6aCACCyl1oJ7xcpmp3Q7Gn+gAvd0nSYivW
+dDtnUWmCiamTwXOL1Jd1w5ml7nCn7rJuQDTwRfU0IKJrC+DdNbF/QjNUsM2IDgWx
+jo7T2+nCcI/3ujMaXrtWQ0B7E7MqhJCWxP1i/2YJWU/cjHHM/B3+V+fAc6TM2JBs
+gcRCVVCtdjvRokPmD3P4mJ7DxRnrM/uWguYnsQsNNNTtiIJYQbhqMH+dxFw7LIrR
+vkEx8r1JHn/O2IpsNA8+3njZka5a15VKCHeVm4QOVhtlf7NAko84+oOXZqQHVe1+
+QoIaLe4nx4xpACkYtfE8q0XS8xukQ9YGbLOhhAUm3ifN5sEQAfuV0QOY
+=hq1a
+-----END PGP SIGNATURE-----

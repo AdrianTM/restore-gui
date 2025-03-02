@@ -9,4 +9,4 @@ Package: restore-gui
 Architecture: any
 Depends: xdg-utils | mx-viewer, git, policykit-1, ${misc:Depends}, ${shlibs:Depends}
 Description: restore-gui
- restore-gui
+ A GUI application that leverages Git to create and restore checkpoints within a directory.
