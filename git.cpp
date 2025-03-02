@@ -134,7 +134,20 @@ QString Git::getUserGit()
 
 QStringList Git::getStatus(const QString &commit)
 {
-    return cmd.getCmdOut("git diff --name-status " + commit + " 2>/dev/null", true).split('\n');
+    // Get modified, added, deleted files from git diff
+    QStringList status = cmd.getCmdOut("git diff --name-status " + commit + " 2>/dev/null", true).split('\n');
+
+    // Get untracked files
+    QStringList untracked = cmd.getCmdOut("git ls-files --others --exclude-standard 2>/dev/null", true).split('\n');
+
+    // Add untracked files with "??" status prefix (same as git status)
+    for (const QString &file : untracked) {
+        if (!file.isEmpty()) {
+            status.append("??\t" + file);
+        }
+    }
+
+    return status;
 }
 
 QStringList Git::listCommits()
