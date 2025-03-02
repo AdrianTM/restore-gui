@@ -31,14 +31,14 @@ Git::Git(QObject *parent)
 {
     // Set busy cursor during git operations
     connect(&cmd, &Cmd::started, [] { QApplication::setOverrideCursor(QCursor(Qt::BusyCursor)); });
-    connect(&cmd, &Cmd::finished, [] { QApplication::setOverrideCursor(QCursor(Qt::ArrowCursor)); });
+    connect(&cmd, &Cmd::done, [] { QApplication::setOverrideCursor(QCursor(Qt::ArrowCursor)); });
 }
 
 void Git::add(const QStringList &files)
 {
     // Handle both single file and multiple files cases
     const QString command = (files.size() == 1 && files.at(0) == ".") ? "git add ." : "git add " + files.join(' ');
-    cmd.run(command, false, needElevation());
+    cmd.run(command, nullptr, nullptr, false, needElevation());
 }
 
 void Git::commit(const QStringList &files, const QString &message)
@@ -55,16 +55,17 @@ void Git::commit(const QStringList &files, const QString &message)
             return;
         }
         // Initialize repository and make first commit
-        cmd.run("git init && git add " + addList + " && git commit -m '" + message + "'", false, needElevation());
+        cmd.run("git init && git add " + addList + " && git commit -m '" + message + "'", nullptr, nullptr, false,
+                needElevation());
     } else {
         // Regular commit
-        cmd.run("git add " + addList + " && git commit -m '" + message + "'", false, needElevation());
+        cmd.run("git add " + addList + " && git commit -m '" + message + "'", nullptr, nullptr, false, needElevation());
     }
 }
 
 void Git::popStash()
 {
-    cmd.run("git stash pop", false, needElevation());
+    cmd.run("git stash pop", nullptr, nullptr, false, needElevation());
 }
 
 void Git::rebaseToPrevious(const QString &commit)
@@ -73,14 +74,14 @@ void Git::rebaseToPrevious(const QString &commit)
         return;
     }
     const QString command = QString("git rebase --onto $(git rev-parse %1^) %1").arg(commit);
-    cmd.run(command, false, needElevation());
+    cmd.run(command, nullptr, nullptr, false, needElevation());
 }
 
 void Git::stash(const QStringList &files)
 {
     const QString command
         = files.isEmpty() ? "git stash" : "git stash push " + files.join(' ') + " -m 'stash created by GUI program'";
-    cmd.run(command, false, needElevation());
+    cmd.run(command, nullptr, nullptr, false, needElevation());
 }
 
 // Stash, branch, and reset
@@ -90,7 +91,8 @@ QString Git::resetToCommit(const QString &commit)
     if (commit.isEmpty()) {
         return {};
     }
-    cmd.run("git stash && git branch " + name + " && git reset --hard " + commit, false, needElevation());
+    cmd.run("git stash && git branch " + name + " && git reset --hard " + commit, nullptr, nullptr, false,
+            needElevation());
     return name;
 }
 
@@ -102,7 +104,7 @@ void Git::revertFiles(const QString &commit, const QStringList &files)
     }
     QString command = "git stash && git checkout " + commit + " -- " + files.join(' ')
                       + " && git commit -m 'Restored files: " + files.join(' ') + "'";
-    cmd.run(command, false, needElevation());
+    cmd.run(command, nullptr, nullptr, false, needElevation());
 }
 
 void Git::setEmailGit(const QString &email)
@@ -118,27 +120,27 @@ void Git::setUserGit(const QString &name)
 QString Git::createBackupBranch()
 {
     const QString name = "bak_" + QDateTime::currentDateTime().toString(QStringLiteral("yyyyMMdd_HHmmss"));
-    cmd.run("git branch " + name, false, needElevation());
+    cmd.run("git branch " + name, nullptr, nullptr, false, needElevation());
     return name;
 }
 
 QString Git::getEmailGit()
 {
-    return cmd.getCmdOut("git config --global --get user.email 2>/dev/null", true);
+    return cmd.getOut("git config --global --get user.email 2>/dev/null", true);
 }
 
 QString Git::getUserGit()
 {
-    return cmd.getCmdOut("git config --global --get user.name 2>/dev/null", true);
+    return cmd.getOut("git config --global --get user.name 2>/dev/null", true);
 }
 
 QStringList Git::getStatus(const QString &commit)
 {
     // Get modified, added, deleted files from git diff
-    QStringList status = cmd.getCmdOut("git diff --name-status " + commit + " 2>/dev/null", true).split('\n');
+    QStringList status = cmd.getOut("git diff --name-status " + commit + " 2>/dev/null", true).split('\n');
 
     // Get untracked files
-    QStringList untracked = cmd.getCmdOut("git ls-files --others --exclude-standard 2>/dev/null", true).split('\n');
+    QStringList untracked = cmd.getOut("git ls-files --others --exclude-standard 2>/dev/null", true).split('\n');
 
     // Add untracked files with "??" status prefix (same as git status)
     for (const QString &file : untracked) {
@@ -155,7 +157,7 @@ QStringList Git::listCommits()
     if (!isInitialized()) {
         return {};
     }
-    return cmd.getCmdOut("git log --pretty=format:'%h|%cr - %s' 2>/dev/null", true).split('\n');
+    return cmd.getOut("git log --pretty=format:'%h|%cr - %s' 2>/dev/null", true).split('\n');
 }
 
 bool Git::hasModifiedFiles()
@@ -163,12 +165,12 @@ bool Git::hasModifiedFiles()
     if (!isInitialized()) {
         return true;
     }
-    return !cmd.getCmdOut("git status --porcelain 2>/dev/null", true).isEmpty();
+    return !cmd.getOut("git status --porcelain 2>/dev/null", true).isEmpty();
 }
 
 bool Git::initialize()
 {
-    return cmd.run("git init", false, needElevation());
+    return cmd.run("git init", nullptr, nullptr, false, needElevation());
 }
 
 bool Git::isInitialized()
@@ -183,11 +185,11 @@ bool Git::needElevation()
 
 QString Git::getCurrentBranch()
 {
-    return cmd.getCmdOut("git branch --show-current");
+    return cmd.getOut("git branch --show-current");
 }
 
 // Try to guess if the directory has a lot of file in a quick way
 bool Git::isLargeDirectory()
 {
-    return cmd.getCmdOut("find " + QDir::currentPath() + " -maxdepth 3 2>/dev/null | wc -l").toUInt() > 500;
+    return cmd.getOut("find " + QDir::currentPath() + " -maxdepth 3 2>/dev/null | wc -l").toUInt() > 500;
 }

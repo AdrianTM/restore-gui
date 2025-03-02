@@ -1,6 +1,6 @@
-restore-gui (0.23.6) mx; urgency=medium
+restore-gui (0.25.3) UNRELEASED; urgency=medium
 
-  * Initial release 
+  * Test build
 
- -- Adrian <adrian@mxlinux.org>  Thu, 22 Jun 2023 20:25:32 -0400
+ -- Adrian <adrian@mxlinux.org>  Sun, 02 Mar 2025 12:11:39 -0500
 

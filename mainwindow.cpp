@@ -524,18 +524,17 @@ void MainWindow::pushSchedule_clicked()
 
     if (git->needElevation()) {
         currentPattern = Cmd()
-                             .getCmdOut("cat /etc/cron.d/restore-gui | grep 'cd " + currentDir.path()
-                                            + " && git add . && git commit -m "
-                                              "\"Scheduled checkpoint\"' | cut -d' ' -f1-5",
-                                        true, true)
+                             .getOut("cat /etc/cron.d/restore-gui | grep 'cd " + currentDir.path()
+                                         + " && git add . && git commit -m "
+                                           "\"Scheduled checkpoint\"' | cut -d' ' -f1-5",
+                                     true, true)
                              .trimmed();
     } else {
-        currentPattern
-            = Cmd()
-                  .getCmdOut("crontab -l | grep 'cd " + currentDir.path()
-                                 + " && git add . && git commit -m \"Scheduled checkpoint\"' | cut -d' ' -f1-5",
-                             true)
-                  .trimmed();
+        currentPattern = Cmd()
+                             .getOut("crontab -l | grep 'cd " + currentDir.path()
+                                         + " && git add . && git commit -m \"Scheduled checkpoint\"' | cut -d' ' -f1-5",
+                                     true)
+                             .trimmed();
     }
     if (currentPattern.startsWith("@reboot")) {
         currentPattern = "@reboot";
@@ -585,33 +584,48 @@ void MainWindow::pushSchedule_clicked()
             return;
         }
 
-        QString command;
-        bool success = false;
-
-        // Remove schedule first for currentDir
+        // Remove existing schedule first
         QString escapedPath = currentPath;
         escapedPath.replace("/", "\\/");
-        command = git->needElevation() ? QString("sed -i '/cd %1/d' /etc/cron.d/restore-gui").arg(escapedPath)
-                                       : QString("crontab -l 2>/dev/null | grep -v 'cd %1 && git add . && git commit "
-                                                 "-m \"Scheduled checkpoint\"' | crontab -")
-                                             .arg(currentPath);
-        success = Cmd().run(command, false, git->needElevation());
 
-        // Add schedule
+        bool success = false;
+        const bool needElevation = git->needElevation();
+        Cmd cmd;
+
+        // Remove existing schedule
+        if (needElevation) {
+            success = cmd.runAsRoot(QString("sed -i '/cd %1/d' /etc/cron.d/restore-gui").arg(escapedPath));
+
+            // Clean up empty cron file if it exists
+            if (cmd.runAsRoot("[ -f /etc/cron.d/restore-gui ] && [ ! -s /etc/cron.d/restore-gui ]", nullptr, nullptr,
+                              true)) {
+                cmd.procAsRoot("rm", {"-f", "/etc/cron.d/restore-gui"});
+            }
+        } else {
+            success = cmd.run(QString("crontab -l 2>/dev/null | grep -v 'cd %1 && git add . && git commit "
+                                      "-m \"Scheduled checkpoint\"' | crontab -")
+                                  .arg(currentPath));
+        }
+
+        // Add new schedule if not "none"
         if (selectedPattern != "none") {
             const QString cronCommand = QString("%1 cd %2 && git add . && git commit -m \"Scheduled checkpoint\"")
                                             .arg(selectedPattern, currentPath);
-            command = git->needElevation()
-                          ? QString("echo '%1' | sudo tee -a /etc/cron.d/restore-gui").arg(cronCommand)
-                          : QString("(crontab -l 2>/dev/null; echo '%1') | crontab -").arg(cronCommand);
-            success = Cmd().run(command, false, git->needElevation());
+
+            if (needElevation) {
+                success = cmd.runAsRoot(QString("echo '%1' | tee -a /etc/cron.d/restore-gui").arg(cronCommand));
+            } else {
+                success = cmd.run(QString("(crontab -l 2>/dev/null; echo '%1') | crontab -").arg(cronCommand));
+            }
         }
 
-        const QString message
-            = success ? tr("Scheduled checkpoints have been %1.")
-                            .arg(selectedPattern == "none" ? tr("removed") : tr("configured successfully"))
-                      : tr("Failed to %1 scheduled checkpoints.")
-                            .arg(selectedPattern == "none" ? tr("remove") : tr("set up"));
+        // Determine message based on operation result
+        const bool isRemoval = selectedPattern == "none";
+        const QString action = isRemoval ? tr("removed") : tr("configured successfully");
+        const QString failedAction = isRemoval ? tr("remove") : tr("set up");
+
+        const QString message = success ? tr("Scheduled checkpoints have been %1.").arg(action)
+                                        : tr("Failed to %1 scheduled checkpoints.").arg(failedAction);
 
         QMessageBox msgBox(this);
         msgBox.setWindowTitle(success ? tr("Success") : tr("Error"));

@@ -1,7 +1,9 @@
+docs/*			usr/share/doc/restore-gui
 restore-gui		usr/bin
 restore-gui.conf	etc
 restore-gui.desktop	usr/share/applications
 restore-gui.png		usr/share/icons/hicolor/48x48/apps
 restore-gui.png		usr/share/pixmaps
-docs/*			usr/share/doc/restore-gui
+scripts/*.policy        usr/share/polkit-1/actions
+scripts/helper          usr/lib/restore-gui
 translations/*.qm	usr/share/restore-gui/locale
