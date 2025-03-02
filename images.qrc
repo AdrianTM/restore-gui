@@ -1,0 +1,8 @@
+<RCC>
+    <qresource prefix="/icons">
+        <file>images/logo.svg</file>
+        <file>images/go-up-symbolic.svg</file>
+        <file>images/go-previous-symbolic.svg</file>
+        <file>images/go-next-symbolic.svg</file>
+    </qresource>
+</RCC>

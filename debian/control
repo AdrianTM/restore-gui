@@ -1,0 +1,12 @@
+Source: restore-gui
+Section: admin
+Priority: optional
+Maintainer: Adrian <adrian@mxlinux.org>
+Build-Depends: debhelper (>=10), qtbase5-dev, qttools5-dev-tools
+Standards-Version: 3.9.8
+
+Package: restore-gui
+Architecture: any
+Depends: xdg-utils | mx-viewer, git, policykit-1, ${misc:Depends}, ${shlibs:Depends}
+Description: restore-gui
+ restore-gui

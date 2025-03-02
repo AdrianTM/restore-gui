@@ -1,0 +1,40 @@
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA512
+
+Format: 1.8
+Date: Thu, 22 Jun 2023 20:25:32 -0400
+Source: restore-gui
+Architecture: source
+Version: 0.23.6
+Distribution: mx
+Urgency: medium
+Maintainer: Adrian <adrian@mxlinux.org>
+Changed-By: Adrian <adrian@mxlinux.org>
+Changes:
+ restore-gui (0.23.6) mx; urgency=medium
+ .
+   * Initial release
+Checksums-Sha1:
+ c75af748bd0004d827097f0e8d13b60bff9645dc 1122 restore-gui_0.23.6.dsc
+ d19d99b828ff5a23b135fe8c3dd217448beeef8e 21104 restore-gui_0.23.6.tar.xz
+ 203cfb588f019350bb9efa49b5f5c800a3de8d9b 10744 restore-gui_0.23.6_amd64.buildinfo
+Checksums-Sha256:
+ 756e7f6b899e5ecc00dabd8eb4e797e061e88e852202812feaff0d472640147c 1122 restore-gui_0.23.6.dsc
+ e40b442e6719e048d24e9637ffb25c499b1d16e25d20c658e632af130c105e19 21104 restore-gui_0.23.6.tar.xz
+ 6533b90f02301b6ffdf8bee461e348cc3b9aab2bb034e0ff8ca44e9a8fc8307b 10744 restore-gui_0.23.6_amd64.buildinfo
+Files:
+ 0024117c6f24b509346ca9f372c31ee7 1122 admin optional restore-gui_0.23.6.dsc
+ 527c2e0f9e732dd01f4f48271626b0d5 21104 admin optional restore-gui_0.23.6.tar.xz
+ c9eee2f88d7b79cbfed88364fad8207f 10744 admin optional restore-gui_0.23.6_amd64.buildinfo
+
+-----BEGIN PGP SIGNATURE-----
+
+iQFHBAEBCgAxFiEE8ndToY6S45N+YzXncJOMeAZ57pgFAmSU5wMTHGFkcmlhbkBt
+eGxpbnV4Lm9yZwAKCRBwk4x4BnnumH/aB/9WJQpMCo8uyWjLjHREyiN2Y4l6Bvoc
+Lj0v+4Ww9mFN5TW0RJRy7crOQ0n12+5066lz7Z5ITnUxN6sLX1rHxI7Vn2nit4Lc
+ePxdV6ObyyXaXX+h4uHqBKO5S/UGSxpvr8pPzMa9e1kxybhpjD5DX/eWHFLxkBKC
+5XppMLuoVwV3G8MD2MXHEjSNwV5eIjKnNyLkpYSyctJxgjwlPqlQq2PfIWiQP3rg
+lkjM5PlCYH413Nm6uJkN9AAI2eXqVQdYza3wZEnMOqia44tWt7EjoSAoEHhkwznS
+zmxe1RxaYzWuvCWlC5l47D3uvH2FIwfGhjYzh8atgr2Qqx/SdcQw6ksz
+=+5he
+-----END PGP SIGNATURE-----
