@@ -12,20 +12,20 @@ Build-Depends: debhelper (>= 10), qtbase5-dev, qttools5-dev-tools
 Package-List:
  restore-gui deb admin optional arch=any
 Checksums-Sha1:
- 378419431709521932b08d29142126d0b168e054 31296 restore-gui_0.25.3.tar.xz
+ 8ae1b299a392aa1f79b4f19eae2fab1835762619 31308 restore-gui_0.25.3.tar.xz
 Checksums-Sha256:
- 20d02afa05a941aa5463896389d0e35f09a09e3d270d03c0b103caaf7e8fe52a 31296 restore-gui_0.25.3.tar.xz
+ 59bd0be2b827bd9fe90ea93225af657671a0b9e93d3abe3934faf354f16d06a1 31308 restore-gui_0.25.3.tar.xz
 Files:
- d96e4ec75ae1324a5f8d1405a018408b 31296 restore-gui_0.25.3.tar.xz
+ 1a5c98a0946561c92f0ca6a431093e29 31308 restore-gui_0.25.3.tar.xz
 
 -----BEGIN PGP SIGNATURE-----
 
-iQFHBAEBCgAxFiEE8ndToY6S45N+YzXncJOMeAZ57pgFAmfEpYMTHGFkcmlhbkBt
-eGxpbnV4Lm9yZwAKCRBwk4x4BnnumL+ICADI6nk/h6579jATwlKf1IN1q2lvaraz
-eLB15d+2r+EDF0SjCQKh5ZyZIrVHge7+OP7ooUL/KOiqOPWxzEyhLXczT8jkG7a4
-CURkbkfDNlAhLPxc7WoCPa/7SJ+/Y8pjiu15uDW2ISy3/7LkD28ogYYO1QGFABhD
-i3ZVY9inF/LIfScdSa0LRgeR9hlPIQwGMkF+ZGHD/jq7xpD2N7ZzrgQZDtEybOiN
-VP5gnqI9T10LTI1SZnOdiEu7nm9YPTcobH7apWzcn/he0V775XuTf60x9njRGN9g
-bTQ+qOuhjg3HctfyJx38S/tczuck+vs7wfJDhgNPFia5VRgF+hhStrmY
-=Q6NV
+iQFHBAEBCgAxFiEE8ndToY6S45N+YzXncJOMeAZ57pgFAmfE3xwTHGFkcmlhbkBt
+eGxpbnV4Lm9yZwAKCRBwk4x4BnnumFTCB/4iETrySjvgZBA8+dr0ZM1r01MOybj2
+g0fgTLhnATJnPZaPXPm3b9bvanYoVSc26qMiV5Fuv/vawQOKQ+EEJmlLZl5RcmZk
+HpCam+/GR8QBxPWGWolLt51XKCv/rj0WH5MsQjpVCUYFPT6otZLpYryL5ssNRtw/
+MpVB3/1/GQszXhf1wEFIswMtWk9rgnWQ1AmODsASpIEkj7lMLh0ZQw3xNJEvBDaA
+onqWjjuhwKzSmZuuztoQDfnvYC8riXdsbfPpbXkDvIglZj1wYBZoqQDBzh5Zd5OU
+2ma2fYMzbmAhp5bYaVAtI9ydmRN87fSctIFQ4eSZ/YwVpb99yEdo6NoC
+=TAxp
 -----END PGP SIGNATURE-----
