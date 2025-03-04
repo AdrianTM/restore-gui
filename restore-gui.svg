@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   width="64"
+   height="64"
+   version="1"
+   id="svg14"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs18" />
+  <path
+     style="display:inline;opacity:0.1;fill:#ffffff"
+     d="m 6.80,4 c -1.55,0 -2.80,1.25 -2.80,2.80 v 1 C 4.00,6.25 5.25,5 6.80,5 H 57.20 c 1.5512,0 2.80,1.25 2.80,2.80 v -1 C 60.000000,5.25 58.75,4 57.20,4 Z"
+     id="path4343" />
+  <path
+     style="display:inline;opacity:0.2"
+     d="m 32,3 c -1.571499,0 -3.144048,0.5857443 -4.318781,1.7604495 L 3.7604235,28.683099 c -2.3494678,2.349408 -2.3461349,6.281166 0.00343,8.630576 L 27.683777,61.236266 c 2.349468,2.349411 6.28473,2.352743 8.634198,0.0034 l 23.919924,-23.92259 c 2.349467,-2.34941 2.349468,-6.284534 0,-8.633943 L 36.317912,4.7605085 C 35.143179,3.5858035 33.570629,3 32,3 Z"
+     id="path2" />
+  <path
+     style="display:inline;fill:#c2352a"
+     d="m 32,2 c -1.571499,0 -3.144048,0.5857443 -4.318781,1.7604495 L 3.7604235,27.683068 c -2.3494678,2.349408 -2.3461349,6.281166 0.00343,8.630576 L 27.683777,60.236235 c 2.349468,2.349411 6.28473,2.352743 8.634198,0.0034 l 23.919924,-23.92259 c 2.349467,-2.34941 2.349468,-6.284534 0,-8.633943 L 36.317912,3.7604772 C 35.143179,2.5857722 33.570629,2 32,2 Z"
+     id="path4" />
+  <path
+     style="display:inline;opacity:0.2"
+     d="m 24,38 a 6,6 0 0 0 -6,6 6,6 0 0 0 6,6 6,6 0 0 0 6,-6 6,6 0 0 0 -6,-6 z"
+     id="path1041" />
+  <path
+     id="path301"
+     style="fill-opacity:1;stroke-width:1.5;stroke-linecap:square;stroke-miterlimit:2;paint-order:markers fill stroke;opacity:0.2"
+     d="m 40,15 -8,8 8,8 v -6 c 5,0 9,4 9,9 0,5 -4,9 -9,9 H 26 v 4 H 40 C 47.179702,47 53,41.179702 53,34 53,26.820298 47.179702,21 40,21 Z" />
+  <path
+     id="path1956"
+     style="fill:#ffffff;fill-opacity:1;stroke-width:1.5;stroke-linecap:square;stroke-miterlimit:2;paint-order:markers fill stroke"
+     d="m 40,14 -8,8 8,8 v -6 c 5,0 9,4 9,9 0,5 -4,9 -9,9 H 26 v 4 H 40 C 47.179702,46 53,40.179702 53,33 53,25.820298 47.179702,20 40,20 Z" />
+  <path
+     style="display:inline;opacity:0.2"
+     d="m 24,17 a 6,6 0 0 0 -6,6 6,6 0 0 0 6,6 6,6 0 0 0 6,-6 6,6 0 0 0 -6,-6 z"
+     id="path8" />
+  <path
+     style="display:inline;fill:#ffffff;fill-opacity:1;fill-rule:evenodd"
+     d="M 16.134766,11.306641 13.306641,14.134766 22,22.828125 V 44 h 4 V 21 Z"
+     id="path6" />
+  <path
+     style="display:inline;fill:#ffffff"
+     d="m 24,37 a 6,6 0 0 0 -6,6 6,6 0 0 0 6,6 6,6 0 0 0 6,-6 6,6 0 0 0 -6,-6 z"
+     id="path1029" />
+  <path
+     style="display:inline;fill:#ffffff"
+     d="m 24,16 a 6,6 0 0 0 -6,6 6,6 0 0 0 6,6 6,6 0 0 0 6,-6 6,6 0 0 0 -6,-6 z"
+     id="path10" />
+</svg>
