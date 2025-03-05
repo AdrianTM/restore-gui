@@ -121,8 +121,6 @@ void MainWindow::centerWindow()
 
 void MainWindow::setup()
 {
-    this->adjustSize();
-
     // Set monospace font for changes list
     QFont font(QStringLiteral("monospace"));
     font.setStyleHint(QFont::Monospace);

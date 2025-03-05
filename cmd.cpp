@@ -10,7 +10,7 @@
 Cmd::Cmd(QObject *parent)
     : QProcess(parent),
       asRoot {QFile::exists("/usr/bin/pkexec") ? "/usr/bin/pkexec" : "/usr/bin/gksu"},
-      helper {"/usr/lib/" + QApplication::applicationName() + "/helper"}
+      helper {QString("/usr/lib/%1/helper").arg(QApplication::applicationName())}
 {
     connect(this, &Cmd::readyReadStandardOutput, [this] { emit outputAvailable(readAllStandardOutput()); });
     connect(this, &Cmd::readyReadStandardError, [this] { emit errorAvailable(readAllStandardError()); });
@@ -46,7 +46,7 @@ bool Cmd::proc(const QString &cmd, const QStringList &args, QString *output, con
     connect(this, &Cmd::done, &loop, &QEventLoop::quit);
     if (elevate && getuid() != 0) {
         QStringList cmdAndArgs = QStringList() << helper << cmd << args;
-        start(asRoot, {cmdAndArgs});
+        start(asRoot, cmdAndArgs);
     } else {
         start(cmd, args);
     }
