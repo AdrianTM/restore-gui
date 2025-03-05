@@ -43,7 +43,7 @@ int main(int argc, char *argv[])
         qputenv("HOME", "/root");
     }
     QApplication::setOrganizationName(QStringLiteral("MX-Linux"));
-    QIcon appIcon = QIcon::fromTheme(QApplication::applicationName(), QIcon(":/icons/fallback-icon.png"));
+    QIcon appIcon = QIcon::fromTheme(QApplication::applicationName(), QIcon("/usr/share/pixmap/restore-gui.png"));
     QApplication::setWindowIcon(appIcon);
 
     QTranslator qtTran;
